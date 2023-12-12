@@ -1,0 +1,61 @@
+#!/usr/bin/env bats
+load 'regressions'
+
+#@test "AND" {
+#  ./compile.py tests/and.c > tests/expect_asm/and
+#  cat tests/expect_asm/and | ./lc3run > tests/expect_out/and
+#  diff tests/expect_asm/and tests/expect_asm/and.correct
+#  diff tests/expect_out/and tests/expect_out/and.correct
+#}
+
+@test "AND" {
+    run and
+}
+
+@test "array" {
+    run array
+}
+
+@test "puts" {
+    run puts
+}
+
+@test "division" {
+    run division
+}
+
+@test "harmonic" {
+    run harmonic
+}
+
+@test "global" {
+    run global
+}
+
+@test "initializers" {
+    run initializers
+}
+
+@test "functions" {
+    run functions
+}
+
+@test "for" {
+    run for
+}
+
+@test "pointers" {
+    run pointers
+}
+
+@test "scope" {
+    run scope
+}
+
+@test "lshift" {
+   run lshift
+}
+
+@test "bad_fold" {
+    run bad_fold
+}
