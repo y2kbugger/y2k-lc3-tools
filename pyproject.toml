@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "y2k-lc3-tools"
+name = "y2klc3tools"
 version = "0.1.0"
 description = ""
 authors = ["y2k <git@y2kbugger.com>"]
