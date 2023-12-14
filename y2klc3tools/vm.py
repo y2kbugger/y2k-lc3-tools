@@ -1,15 +1,14 @@
-#!/usr/bin/env python3
 """
 Implementation of virtual machine for LC-3 assembly language in python
 """
 
-__version__ = '1.1'
 
 import array
 import select
 import sys
 import termios
 import tty
+from typing import Any
 
 
 UINT16_MAX = 2 ** 16
@@ -17,6 +16,7 @@ PC_START = 0x3000
 
 is_running = 1
 memory = None
+reg = None
 
 
 def getchar():
@@ -54,7 +54,6 @@ class register_dict(dict):
         super().__setitem__(key, value % UINT16_MAX)
 
 
-reg = register_dict({i: 0 for i in range(R.COUNT)})
 
 
 class OP:
@@ -277,7 +276,7 @@ def trap_putsp():
 
 def trap_halt():
     global is_running
-    print('HALT')
+    print('-- HALT --')
     is_running = 0
 
 
@@ -354,35 +353,33 @@ def update_flags(r):
         reg[R.COND] = FL.POS
 
 
-def read_image_file(file_name):
-    global memory
+class VM:
+    def load_image_from_file(self, file_path):
+        with open(file_path, 'rb') as f:
+            self.load_image_bytes(f.read())
 
-    with open(file_name, 'rb') as f:
-        origin = int.from_bytes(f.read(2), byteorder='big')
+    def load_image_bytes(self, image_bytes : bytes):
+        global memory
+        origin = int.from_bytes(image_bytes[:2], byteorder='big')
         memory = array.array("H", [0] * origin)
         max_read = UINT16_MAX - origin
-        memory.frombytes(f.read(max_read))
+        memory.frombytes(image_bytes[2:max_read])
         memory.byteswap()
         memory.fromlist([0]*(UINT16_MAX - len(memory)))
 
+    def reset(self):
+        print('-- RESET --')
+        global reg
+        global is_running
+        reg = register_dict({i: 0 for i in range(R.COUNT)})
+        reg[R.PC] = PC_START
+        reg[R.COND] = FL.POS
+        is_running = 1
 
-def main():
-    if len(sys.argv) < 2:
-        print('vm.py [obj-file]')
-        exit(2)
-
-    file_path = sys.argv[1]
-    read_image_file(file_path)
-
-    reg[R.PC] = PC_START
-
-    while is_running:
-        instr = mem_read(reg[R.PC])
-        reg[R.PC] += 1
-        op = instr >> 12
-        fun = ops.get(op, bad_opcode)
-        fun(instr)
-
-
-if __name__ == '__main__':
-    main()
+    def continue_(self):
+        while is_running:
+            instr = mem_read(reg[R.PC])
+            reg[R.PC] += 1
+            op = instr >> 12
+            fun = ops.get(op, bad_opcode)
+            fun(instr)
