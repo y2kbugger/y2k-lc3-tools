@@ -22,12 +22,14 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. Move C compiler tests to use pytest
 1. Make C compiler tests use the pure python assembler and vm
 1. Remove the dependencies that I installed for the c compiler (bats and moreutils)
+1. Recreate a holistic CLI interface for the assembler, vm, and C compiler
 
 # Previous work
 I have modernized the tooling and combined multiple projects for the LC-3 into one repo. The original projects are listed below, and I have included the commit hash of the last commit I pulled from each repo, incase I want to merge in later upstream changes.
 ## The C compiler for the LC-3
 https://github.com/nickodell/lc3-cc
 8d41f34 Update documentation
+Nickodell's version was, in turn, inspired by [this tutorial](https://github.com/justinmeiners/lc3-vm).
 ## The LC-3 assembler
 https://github.com/paul-nameless/lc3-asm.git
 38ac008 Rewrite bunch of IFs in dict condision (why? I see so) Fix disasm
