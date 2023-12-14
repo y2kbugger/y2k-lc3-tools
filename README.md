@@ -12,6 +12,7 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. Get the simulator working from a notebook e.g. strip out cli tools
 1. Get the assembler working from a notebook e.g. strip out cli tools
 1. Get the simulator working in my repo and running under pytest
+1. Simplify the vm code and make it more pythonic
 1. Get the assembler working in my repo and running under pytest
 1. combine info from all three readme's into one. including history of the projects, e.g. CSU extension with push/pop
 1. Document that the original assmember was written in C and had poor cli interface and gui was in tcl and also odd.
@@ -23,6 +24,9 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. Make C compiler tests use the pure python assembler and vm
 1. Remove the dependencies that I installed for the c compiler (bats and moreutils)
 1. Recreate a holistic CLI interface for the assembler, vm, and C compiler
+
+# Tests
+1. image file too big for VM
 
 # Previous work
 I have modernized the tooling and combined multiple projects for the LC-3 into one repo. The original projects are listed below, and I have included the commit hash of the last commit I pulled from each repo, incase I want to merge in later upstream changes.
