@@ -13,6 +13,9 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. Get the assembler working from a notebook e.g. strip out cli tools
 1. Get the simulator working in my repo and running under pytest
 1. Simplify the vm code and make it more pythonic
+    - move all state int VM class
+    - make definitions of opcodes and registers more pythonic
+    - rewrite loader to make it simpler
 1. Get the assembler working in my repo and running under pytest
 1. combine info from all three readme's into one. including history of the projects, e.g. CSU extension with push/pop
 1. Document that the original assmember was written in C and had poor cli interface and gui was in tcl and also odd.

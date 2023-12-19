@@ -352,20 +352,53 @@ def update_flags(r):
     else:
         reg[R.COND] = FL.POS
 
-
 class VM:
-    def load_image_from_file(self, file_path):
-        with open(file_path, 'rb') as f:
-            self.load_image_bytes(f.read())
-
-    def load_image_bytes(self, image_bytes : bytes):
+    @property
+    def memory(self):
+        """todo: don't use global memory"""
         global memory
-        origin = int.from_bytes(image_bytes[:2], byteorder='big')
-        memory = array.array("H", [0] * origin)
-        max_read = UINT16_MAX - origin
-        memory.frombytes(image_bytes[2:max_read])
+        return memory
+
+    def load_binary_from_file(self, file_path : str):
+        """Read the contents of a binary file into memory."""
+        with open(file_path, 'rb') as f:
+            bytes_read = f.read()
+        self.load_binary(bytes_read)
+
+    def load_binary(self, image_binary : bytes):
+        """Load a flat binary file into memory.
+
+        This function interprets the given binary data as an image file with a specific format and loads it into the global 'memory'. The binary format is expected as follows:
+
+        - Origin (2 bytes): The first two bytes specify the 'origin', i.e., the starting address in memory where the image data will be loaded. It's interpreted as a big-endian unsigned integer.
+        - Image Data (variable length): The rest of the binary data represents the image content.
+
+        Parameters:
+        image_binary: The binary data of the image to be loaded.
+
+        Raises:
+        Exception: If the image data exceeds the maximum allowable size for loading.
+        Exception: If the image doesn't map to a whole number of 2 byte words.
+        """
+        global memory
+
+        # pad front
+        origin = int.from_bytes(image_binary[:2], byteorder='big')
+        memory = array.array("H", (0 for _ in range(origin)))
+
+        # write image
+        max_read = (UINT16_MAX - origin) * 2
+        if len(image_binary[2:]) > max_read:
+            print(len(image_binary))
+            print(len(image_binary[2:]))
+            raise Exception(f"Image file too big to load.")
+        if len(image_binary[2:]) % 2 != 0:
+            raise Exception(f"Image file doesn't map to a whole number of 2 byte words.")
+        memory.frombytes(image_binary[2:])
         memory.byteswap()
-        memory.fromlist([0]*(UINT16_MAX - len(memory)))
+
+        # pad back
+        memory.frombytes(b'\x00\x00'*(UINT16_MAX - len(memory)))
 
     def reset(self):
         print('-- RESET --')
@@ -376,10 +409,16 @@ class VM:
         reg[R.COND] = FL.POS
         is_running = 1
 
+    def step(self):
+        if not is_running:
+            print('-- HALTED --')
+            return
+        instr = mem_read(reg[R.PC])
+        reg[R.PC] += 1
+        op = instr >> 12
+        fun = ops.get(op, bad_opcode)
+        fun(instr)
+
     def continue_(self):
         while is_running:
-            instr = mem_read(reg[R.PC])
-            reg[R.PC] += 1
-            op = instr >> 12
-            fun = ops.get(op, bad_opcode)
-            fun(instr)
+            self.step()
