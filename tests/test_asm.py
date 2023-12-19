@@ -1,26 +1,21 @@
 import glob
 import os
+import pytest
+import pathlib
+from y2klc3tools.asm import assemble
 
+# Collect all .asm files in the tests directory
+test_case_dir = pathlib.Path(__file__).parent.parent / 'obj' / 'asm'
+asm_files = test_case_dir.glob('*.asm')
+test_cases = [os.path.splitext(os.path.basename(f))[0] for f in asm_files]
 
-def main():
-    report = {}
-    files = glob.glob('tests/*.asm')
-    for filename in files:
-        base = os.path.splitext(filename)[0]
-        print(f'{"-" * 32} Testing {base} {"-" * 32}')
-        rc = os.system(f'python3 lc3.py {filename}')
-        if rc:
-            report[filename] = False
-            continue
-        with open(f'{base}.obj', 'rb') as f1:
-            with open(f'{base}-out.obj', 'rb') as f2:
-                report[filename] = f1.read() == f2.read()
-        os.remove(f'{base}-out.obj')
+@pytest.mark.parametrize('case', test_cases)
+def test_asm_files(case):
+    with open(test_case_dir / f'{case}.asm', 'r') as f:
+        asm = f.read()
 
-    print('-' * 32, 'RESULSTS', '-' * 32)
-    for filename, ok in report.items():
-        print(f'{filename:<32} {"OK" if ok else "FAIL"}')
+    symbol_table, assembled_bytes = assemble(asm)
 
-
-if __name__ == '__main__':
-    main()
+    with open(test_case_dir / f'{case}.obj', 'rb') as f:
+        expected_bytes = f.read()
+    assert assembled_bytes == expected_bytes

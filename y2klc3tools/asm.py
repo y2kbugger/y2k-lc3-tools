@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import array
 import sys
 import os
@@ -330,40 +329,16 @@ def asm_pass_two(symbol_table, lines):
 
 
 def dump_symbol_table(symbol_table):
-    with open('2048-out.sym', 'w') as f:
+    with open('out.sym', 'w') as f:
         f.write('\n\n\n\n')
         for a, b in symbol_table.items():
             f.write(f'//\t{a:<16}  {hex(b)[2:].upper()}\n')
 
-
-def main():
-    if len(sys.argv) < 2:
-        print('lc3.py [asm-file]')
-        exit(2)
-
-    file_path = sys.argv[1]
-
-    if not os.path.isfile(file_path):
-        print('No such file')
-        exit(2)
-
-    with open(file_path) as f:
-        code = f.read()
-
-    print('STARTING PASS 1')
+def assemble(code : str):
+    print('STARTING ASSEMBLY PASS 1')
     symbol_table, lines = asm_pass_one(code)
-    dump_symbol_table(symbol_table)
 
-    print('STARTING PASS 2')
+    print('STARTING ASSEMBLY PASS 2')
     bin_data = asm_pass_two(symbol_table, lines)
-    print(bin_data.tobytes().hex())
-    file_name = os.path.splitext(file_path)[0]
-    file_name = f'{file_name}-out.obj'
 
-    with open(file_name, 'wb') as f:
-        f.write(bin_data.tobytes())
-    print('Saved', file_name)
-
-
-if __name__ == '__main__':
-    main()
+    return symbol_table, bin_data.tobytes()

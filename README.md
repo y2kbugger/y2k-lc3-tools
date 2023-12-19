@@ -22,7 +22,7 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
     - rewrite loader to make it simpler
     - separate output channels for io and debug
 1. Get the assembler working in my repo and running under pytest
-    - tests for symbol table also
+    - tests for symbol table also (asm.dump_symbol_table convert to returning str)
 1. combine info from all three readme's into one. including history of the projects, e.g. CSU extension with push/pop
 1. Document that the original assmember was written in C and had poor cli interface and gui was in tcl and also odd.
 1. Document that the original has an acutual operating system written in LC-3 assembly, but our vm stubs out the traps with python
