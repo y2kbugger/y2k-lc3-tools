@@ -378,12 +378,24 @@ class VM:
 
     # END PASSTHROUGH STUBS
     ###########################
+
+    def load_binary_from_file(self, file_path: str):
         """Read the contents of a binary file into memory."""
         with open(file_path, 'rb') as f:
             bytes_read = f.read()
         self.load_binary(bytes_read)
 
-    def load_binary(self, image_binary : bytes):
+    def load_binary_from_hex(self, image_binary_hex : str):
+        """Load a flat binary file into memory.
+
+        Parameters:
+        image_binary_hex -- example: '0x3000DEAD'
+        """
+        image_binary = bytes.fromhex(image_binary_hex)
+        self.load_binary(image_binary)
+
+
+    def load_binary(self, image_binary: bytes):
         """Load a flat binary file into memory.
 
         This function interprets the given binary data as an image file with a specific format and loads it into the global 'memory'. The binary format is expected as follows:
