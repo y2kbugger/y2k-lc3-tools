@@ -58,6 +58,13 @@ def vm_nops(vm):
     vm.load_binary(image_bytes)
     return vm
 
+def test_step_moves_pc_by_one(vm_nops):
+    pc_start = vm_nops.R.PC
+
+    vm_nops.step()
+
+    assert vm_nops.R.PC == pc_start + 1
+
 #continue
 #step
 #halted
