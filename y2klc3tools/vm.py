@@ -353,13 +353,31 @@ def update_flags(r):
         reg[R.COND] = FL.POS
 
 class VM:
+    ###########################
+    # PASSTHROUGH STUBS
+    # these will eventually encapsulate state that is currently in globals
+
     @property
     def memory(self):
         """todo: don't use global memory"""
         global memory
         return memory
 
-    def load_binary_from_file(self, file_path : str):
+    @property
+    def R(self):
+        class _reg:
+            def __getattr__(self, __name: str) -> Any:
+                global reg
+                integer_key = R.__getattribute__(R,__name)
+                return reg[integer_key]
+            def __setattr__(self, __name: str, __value: Any) -> None:
+                global reg
+                integer_key = R.__getattribute__(R,__name)
+                reg[integer_key] = __value
+        return _reg()
+
+    # END PASSTHROUGH STUBS
+    ###########################
         """Read the contents of a binary file into memory."""
         with open(file_path, 'rb') as f:
             bytes_read = f.read()
