@@ -1,7 +1,16 @@
 {
     "python.testing.pytestArgs": [
         "tests"
-    ],
+        ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "testing.openTesting": "openOnTestFailure",
+    "github.copilot.editor.enableCodeActions": false,
+    "notebook.formatOnSave.enabled": true,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.defaultFoldingRangeProvider": "charliermarsh.ruff"
+        },
+
 }
