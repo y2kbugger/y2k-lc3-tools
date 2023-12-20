@@ -21,6 +21,7 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
     - make definitions of opcodes and registers more pythonic
     - rewrite loader to make it simpler
     - separate output channels for io and debug
+    - read from hex str
 1. Get the assembler working in my repo and running under pytest
     - tests for symbol table also (asm.dump_symbol_table convert to returning str)
 1. combine info from all three readme's into one. including history of the projects, e.g. CSU extension with push/pop
