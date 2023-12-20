@@ -1,4 +1,3 @@
-import glob
 import os
 import pytest
 import pathlib
@@ -8,6 +7,7 @@ from y2klc3tools.asm import assemble
 test_case_dir = pathlib.Path(__file__).parent.parent / 'obj' / 'asm'
 asm_files = test_case_dir.glob('*.asm')
 test_cases = [os.path.splitext(os.path.basename(f))[0] for f in asm_files]
+
 
 @pytest.mark.parametrize('case', test_cases)
 def test_asm_files(case):

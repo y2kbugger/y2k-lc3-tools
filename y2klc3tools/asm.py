@@ -1,12 +1,10 @@
 import array
-import sys
-import os
 
 from collections import namedtuple
 
 
 MAX_LINE_LENGTH = 4096
-UINT16_MAX = 2 ** 16
+UINT16_MAX = 2**16
 
 
 REGS = {
@@ -30,44 +28,36 @@ TRAPS = {
 }
 
 OPS = {
-    'BR':  0x0,    # 0b0 branch
-    'BRn': 0x0,    # 0b0 branch if n
-    'BRz': 0x0,    # 0b0 branch
-    'BRp': 0x0,    # 0b0 branch
-    'BRzp': 0x0,   # 0b0 branch
-    'BRnp': 0x0,   # 0b0 branch
-    'BRnz': 0x0,   # 0b0 branch
+    'BR': 0x0,  # 0b0 branch
+    'BRn': 0x0,  # 0b0 branch if n
+    'BRz': 0x0,  # 0b0 branch
+    'BRp': 0x0,  # 0b0 branch
+    'BRzp': 0x0,  # 0b0 branch
+    'BRnp': 0x0,  # 0b0 branch
+    'BRnz': 0x0,  # 0b0 branch
     'BRnzp': 0x0,  # 0b0 branch
-
-    'ADD': 0x1,    # 0b1 add
-    'LD': 0x2,     # 0b10 load
-    'ST': 0x3,     # 0b11 store
-    'JSR': 0x4,    # 0b100 jump register
-    'JSRR': 0x4,   # 0b100 jump register
-    'AND': 0x5,    # 0b101 bitwise and
-    'LDR': 0x6,    # 0b110 load register
-    'STR': 0x7,    # 0b111 store register
-    'RTI': 0x8,    # 0b1000 unused
-    'NOT': 0x9,    # 0b1001 bitwise not
-    'LDI': 0xA,    # 0b1010 load indirect
-    'STI': 0xB,    # 0b1011 store indirect
-    'RET': 0xC,    # 0b1100 return
-    'JMP': 0xC,    # 0b1100 jump
-    'RES': 0xD,    # 0b1101 reserved (unused)
-    'LEA': 0xE,    # 0b1110 load effective address
-    'TRAP': 0xF,   # ob1111 execute trap
-
-    **TRAPS
+    'ADD': 0x1,  # 0b1 add
+    'LD': 0x2,  # 0b10 load
+    'ST': 0x3,  # 0b11 store
+    'JSR': 0x4,  # 0b100 jump register
+    'JSRR': 0x4,  # 0b100 jump register
+    'AND': 0x5,  # 0b101 bitwise and
+    'LDR': 0x6,  # 0b110 load register
+    'STR': 0x7,  # 0b111 store register
+    'RTI': 0x8,  # 0b1000 unused
+    'NOT': 0x9,  # 0b1001 bitwise not
+    'LDI': 0xA,  # 0b1010 load indirect
+    'STI': 0xB,  # 0b1011 store indirect
+    'RET': 0xC,  # 0b1100 return
+    'JMP': 0xC,  # 0b1100 jump
+    'RES': 0xD,  # 0b1101 reserved (unused)
+    'LEA': 0xE,  # 0b1110 load effective address
+    'TRAP': 0xF,  # ob1111 execute trap
+    **TRAPS,
 }
 
 
-DOTS = {
-    '.ORIG': None,
-    '.END': None,
-    '.FILL': None,
-    '.BLKW': None,
-    '.STRINGZ': None
-}
+DOTS = {'.ORIG': None, '.END': None, '.FILL': None, '.BLKW': None, '.STRINGZ': None}
 
 
 class Type:
@@ -166,7 +156,8 @@ def check_syntax(tokens):
     pass
 
 
-def incr(lc, tokens): return lc + 1
+def incr(lc, tokens):
+    return lc + 1
 
 
 def asm_pass_one(code):
@@ -210,8 +201,8 @@ def asm_pass_one(code):
 def encode_ldr_str(op, sym, lc, toks):
     dr = REGS[toks[1].v] << 9
     base_r = REGS[toks[2].v] << 6
-    assert toks[3].v < 2 ** 5
-    offset6 = ((UINT16_MAX + toks[3].v) & 0b111111)
+    assert toks[3].v < 2**5
+    offset6 = (UINT16_MAX + toks[3].v) & 0b111111
     return op | dr | base_r | offset6
 
 
@@ -222,8 +213,8 @@ def encode_add_and(op, sym, lc, toks):
         sr2 = REGS[toks[3].v]
         return op | dr | sr1 | sr2
     else:
-        assert toks[3].v < 2 ** 5
-        imm5 = ((UINT16_MAX + toks[3].v) & 0b11111)
+        assert toks[3].v < 2**5
+        imm5 = (UINT16_MAX + toks[3].v) & 0b11111
         return op | dr | sr1 | 1 << 5 | imm5
 
 
@@ -240,7 +231,7 @@ def encode_br(op, sym, lc, toks):
         op |= 1 << 9
 
     if toks[1].t == Type.LABEL:
-        pcoffset9 = ((sym[toks[1].v] - lc) & 0b111111111)
+        pcoffset9 = (sym[toks[1].v] - lc) & 0b111111111
     elif toks[1].t == Type.CONST:
         pcoffset9 = toks[1].v & 0b111111111
     else:
@@ -263,7 +254,7 @@ encode = {
     'TRAP': lambda op, sym, lc, toks: op | toks[1].v & 0b11111111,
     'RET': lambda op, *_: op | 0b111 << 6,
     'JMP': lambda op, sym, lc, toks: op | REGS[toks[1].v] << 6,
-    'NOT': lambda op, sym, lc, toks: op | REGS[toks[1].v] << 9 | REGS[toks[2].v] << 6 | 0x3f,
+    'NOT': lambda op, sym, lc, toks: op | REGS[toks[1].v] << 9 | REGS[toks[2].v] << 6 | 0x3F,
     'JSR': lambda op, sym, lc, toks: op | 1 << 11 | ((sym[toks[1].v] - lc) & 0b11111111111),
     'JSRR': lambda op, sym, lc, toks: op | REGS[toks[1].v] << 6,
     'LDR': encode_ldr_str,
@@ -283,7 +274,6 @@ encode = {
     'LDI': encode_ld_st,
     'ST': encode_ld_st,
     'STI': encode_ld_st,
-
     'GETC': encode_traps,
     'OUT': encode_traps,
     'PUTS': encode_traps,
@@ -295,21 +285,19 @@ encode = {
 
 def asm_pass_two(symbol_table, lines):
     CONDS = {
-        '.BLKW': lambda tokens, data, sym, lc:
-        data.fromlist([0x0 for _ in range(tokens[1].v)]),
-
-        '.FILL': lambda tokens, data, sym, lc: tokens[1].t == Type.CONST and
-        data.append(tokens[1].v) or tokens[1].t == Type.LABEL and
-        data.append(sym[tokens[1].v]),
-
-        '.STRINGZ': lambda tokens, data, sym, lc:
-        data.fromlist([c for c in tokens[1].v.encode()]) or data.append(0x0),
-
+        '.BLKW': lambda tokens, data, sym, lc: data.fromlist([0x0 for _ in range(tokens[1].v)]),
+        '.FILL': lambda tokens, data, sym, lc: tokens[1].t == Type.CONST
+        and data.append(tokens[1].v)
+        or tokens[1].t == Type.LABEL
+        and data.append(sym[tokens[1].v]),
+        '.STRINGZ': lambda tokens, data, sym, lc: data.fromlist([c for c in tokens[1].v.encode()])
+        or data.append(0x0),
         **{
-            op: lambda toks, data, sym, lc:
-            data.append(encode[toks[0].v](OPS[toks[0].v] << 12, sym, lc, toks))
+            op: lambda toks, data, sym, lc: data.append(
+                encode[toks[0].v](OPS[toks[0].v] << 12, sym, lc, toks)
+            )
             for op, _ in OPS.items()
-        }
+        },
     }
     data = array.array("H", [])
     data.append(lines[0][0][1].v)
@@ -334,7 +322,8 @@ def dump_symbol_table(symbol_table):
         for a, b in symbol_table.items():
             f.write(f'//\t{a:<16}  {hex(b)[2:].upper()}\n')
 
-def assemble(code : str):
+
+def assemble(code: str):
     print('STARTING ASSEMBLY PASS 1')
     symbol_table, lines = asm_pass_one(code)
 

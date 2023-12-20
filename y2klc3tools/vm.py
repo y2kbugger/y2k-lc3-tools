@@ -2,7 +2,6 @@
 Implementation of virtual machine for LC-3 assembly language in python
 """
 
-
 import array
 import select
 import sys
@@ -11,7 +10,7 @@ import tty
 from typing import Any
 
 
-UINT16_MAX = 2 ** 16
+UINT16_MAX = 2**16
 PC_START = 0x3000
 
 is_running = 1
@@ -35,6 +34,7 @@ def getchar():
 
 class R:
     """Regisers"""
+
     R0 = 0
     R1 = 1
     R2 = 2
@@ -49,15 +49,13 @@ class R:
 
 
 class register_dict(dict):
-
     def __setitem__(self, key, value):
         super().__setitem__(key, value % UINT16_MAX)
 
 
-
-
 class OP:
     """opcode"""
+
     BR = 0  # branch
     ADD = 1  # add
     LD = 2  # load
@@ -79,6 +77,7 @@ class OP:
 
 class FL:
     """flags"""
+
     POS = 1 << 0  # P
     ZRO = 1 << 1  # Z
     NEG = 1 << 2  # N
@@ -116,7 +115,7 @@ def ldi(instr):
     # destination register (DR)
     r0 = (instr >> 9) & 0x7
     # PCoffset 9
-    pc_offset = sign_extend(instr & 0x1ff, 9)
+    pc_offset = sign_extend(instr & 0x1FF, 9)
     # add pc_offset to the current PC, look at that memory location to get
     # the final address
     reg[r0] = mem_read(mem_read(reg[R.PC] + pc_offset))
@@ -146,7 +145,7 @@ def not_(instr):
 
 
 def br(instr):
-    pc_offset = sign_extend((instr) & 0x1ff, 9)
+    pc_offset = sign_extend((instr) & 0x1FF, 9)
     cond_flag = (instr >> 9) & 0x7
     if cond_flag & reg[R.COND]:
         reg[R.PC] += pc_offset
@@ -159,7 +158,7 @@ def jmp(instr):
 
 def jsr(instr):
     r1 = (instr >> 6) & 0x7
-    long_pc_offset = sign_extend(instr & 0x7ff, 11)
+    long_pc_offset = sign_extend(instr & 0x7FF, 11)
     long_flag = (instr >> 11) & 1
     reg[R.R7] = reg[R.PC]
 
@@ -171,7 +170,7 @@ def jsr(instr):
 
 def ld(instr):
     r0 = (instr >> 9) & 0x7
-    pc_offset = sign_extend(instr & 0x1ff, 9)
+    pc_offset = sign_extend(instr & 0x1FF, 9)
     reg[r0] = mem_read(reg[R.PC] + pc_offset)
     update_flags(r0)
 
@@ -186,20 +185,20 @@ def ldr(instr):
 
 def lea(instr):
     r0 = (instr >> 9) & 0x7
-    pc_offset = sign_extend(instr & 0x1ff, 9)
+    pc_offset = sign_extend(instr & 0x1FF, 9)
     reg[r0] = reg[R.PC] + pc_offset
     update_flags(r0)
 
 
 def st(instr):
     r0 = (instr >> 9) & 0x7
-    pc_offset = sign_extend(instr & 0x1ff, 9)
+    pc_offset = sign_extend(instr & 0x1FF, 9)
     mem_write(reg[R.PC] + pc_offset, reg[r0])
 
 
 def sti(instr):
     r0 = (instr >> 9) & 0x7
-    pc_offset = sign_extend(instr & 0x1ff, 9)
+    pc_offset = sign_extend(instr & 0x1FF, 9)
     mem_write(mem_read(reg[R.PC] + pc_offset), reg[r0])
 
 
@@ -341,7 +340,7 @@ def mem_read(address):
 def sign_extend(x, bit_count):
     if (x >> (bit_count - 1)) & 1:
         x |= 0xFFFF << bit_count
-    return x & 0xffff
+    return x & 0xFFFF
 
 
 def update_flags(r):
@@ -351,6 +350,7 @@ def update_flags(r):
         reg[R.COND] = FL.NEG
     else:
         reg[R.COND] = FL.POS
+
 
 class VM:
     ###########################
@@ -368,12 +368,14 @@ class VM:
         class _reg:
             def __getattr__(self, __name: str) -> Any:
                 global reg
-                integer_key = R.__getattribute__(R,__name)
+                integer_key = R.__getattribute__(R, __name)
                 return reg[integer_key]
+
             def __setattr__(self, __name: str, __value: Any) -> None:
                 global reg
-                integer_key = R.__getattribute__(R,__name)
+                integer_key = R.__getattribute__(R, __name)
                 reg[integer_key] = __value
+
         return _reg()
 
     # END PASSTHROUGH STUBS
@@ -385,7 +387,7 @@ class VM:
             bytes_read = f.read()
         self.load_binary(bytes_read)
 
-    def load_binary_from_hex(self, image_binary_hex : str):
+    def load_binary_from_hex(self, image_binary_hex: str):
         """Load a flat binary file into memory.
 
         Parameters:
@@ -393,7 +395,6 @@ class VM:
         """
         image_binary = bytes.fromhex(image_binary_hex)
         self.load_binary(image_binary)
-
 
     def load_binary(self, image_binary: bytes):
         """Load a flat binary file into memory.
@@ -421,14 +422,14 @@ class VM:
         if len(image_binary[2:]) > max_read:
             print(len(image_binary))
             print(len(image_binary[2:]))
-            raise Exception(f"Image file too big to load.")
+            raise Exception("Image file too big to load.")
         if len(image_binary[2:]) % 2 != 0:
-            raise Exception(f"Image file doesn't map to a whole number of 2 byte words.")
+            raise Exception("Image file doesn't map to a whole number of 2 byte words.")
         memory.frombytes(image_binary[2:])
         memory.byteswap()
 
         # pad back
-        memory.frombytes(b'\x00\x00'*(UINT16_MAX - len(memory)))
+        memory.frombytes(b'\x00\x00' * (UINT16_MAX - len(memory)))
 
     def reset(self):
         print('-- RESET --')

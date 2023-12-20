@@ -2,7 +2,8 @@
 import array
 import sys
 
-UINT16_MAX = 2 ** 16
+
+UINT16_MAX = 2**16
 
 ops = {
     0: 'BR',
@@ -26,7 +27,7 @@ ops = {
     34: 'PUTS',
     35: 'IN',
     36: 'PUTSP',
-    37: 'HALT'
+    37: 'HALT',
 }
 
 
@@ -43,9 +44,7 @@ def main():
         dump.frombytes(f.read(max_read))
         dump.byteswap()
         for op in dump[1:]:
-            print(
-                f'{hex(origin)}: ({hex(op):>6}) {parse_op(op)} | '
-                f'{chr(op) if op < 256 else ""}')
+            print(f'{hex(origin)}: ({hex(op):>6}) {parse_op(op)} | {chr(op) if op < 256 else ""}')
             origin += 1
 
 
