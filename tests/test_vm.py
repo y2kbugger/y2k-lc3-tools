@@ -44,6 +44,20 @@ def test_image_file_fail_with_partial_word():
     with pytest.raises(Exception, match="2 byte words"):
         vm.load_binary(image_bytes)
 
+@pytest.fixture()
+def vm():
+    vm = VM()
+    vm.reset()
+    return vm
+
+@pytest.fixture()
+def vm_nops(vm):
+    """Load a program that does nothing but run add instructions repeatedly"""
+    origin = b'\x00\x00'
+    image_bytes = origin + b'\x16\xBF' * (UINT16_MAX)
+    vm.load_binary(image_bytes)
+    return vm
+
 #continue
 #step
 #halted
