@@ -13,8 +13,6 @@ The notebooks are in the `notebooks` directory.
 Use the venv created by poetry to run the notebooks, one easy way is from within vscode.
 
 # Todo
-1. Get the assembler working from a notebook e.g. strip out cli tools
-1. Get the disassembler working from a notebook e.g. strip out cli tools
 1. Get the simulator working in my repo and running under pytest
 1. Simplify the vm code and make it more pythonic
     - move all state int VM class
@@ -24,17 +22,21 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
     - read from hex str
 1. Get the assembler working in my repo and running under pytest
     - tests for symbol table also (asm.dump_symbol_table convert to returning str)
+1. Improve disasm
+    - pytests
+    - Get .FILL correct
+    - Be able to use symbol table to get labels
+    - stretch, match the CSU disassembler
 1. combine info from all three readme's into one. including history of the projects, e.g. CSU extension with push/pop
 1. Document that the original assmember was written in C and had poor cli interface and gui was in tcl and also odd.
 1. Document that the original has an acutual operating system written in LC-3 assembly, but our vm stubs out the traps with python
 1. Make a nice api for debugging out vm register traces
 1. Add unit tests for vm register traces
-1. add unit tests for disassembler to match the CSU disassembler (or at least .FILL statements, and .sym aware)
-1. Implement push and pop instruction in the assembler and python vm
-    - or convert compiler to use origial multi instruction push and pop
+1. Get C compiler running in notebook
 1. Move C compiler tests to use pytest
 1. Make C compiler tests use the pure python assembler and vm
 1. Remove the dependencies that I installed for the c compiler (bats and moreutils)
+1. Convert compiler to use origial multi instruction push and pop
 1. Recreate a holistic CLI interface for the assembler, vm, and C compiler
 
 # Previous work
