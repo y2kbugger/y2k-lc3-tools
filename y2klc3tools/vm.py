@@ -420,8 +420,6 @@ class VM:
         # write image
         max_read = (UINT16_MAX - origin) * 2
         if len(image_binary[2:]) > max_read:
-            print(len(image_binary))
-            print(len(image_binary[2:]))
             raise Exception("Image file too big to load.")
         if len(image_binary[2:]) % 2 != 0:
             raise Exception("Image file doesn't map to a whole number of 2 byte words.")
