@@ -454,3 +454,13 @@ class VM:
             return
         while is_running:
             self.step()
+
+
+class TracingVM(VM):
+    def __init__(self):
+        self.reg_trace = []
+
+    def step(self):
+        global reg
+        self.reg_trace.append(list(reg.values()))
+        super().step()

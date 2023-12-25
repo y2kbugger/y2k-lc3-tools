@@ -1,6 +1,6 @@
 import pytest
 
-from y2klc3tools.vm import VM, mem_read, UINT16_MAX
+from y2klc3tools.vm import VM, TracingVM, mem_read, UINT16_MAX
 
 
 def test_load_binary():
@@ -110,3 +110,35 @@ def test_vm_can_run_looping_progam_with_output(vm: VM, capsys: pytest.CaptureFix
     # assert captured.out == "hell0ddd"
     assert captured.out == "Hello, World!\n" * 5
     assert captured.err == "-- HALT --\n"
+
+
+@pytest.fixture()
+def tvm() -> TracingVM:
+    tvm = TracingVM()
+    tvm.reset()
+    return tvm
+
+
+def test_tracing_vm_can_run_looping_progam_with_register_traces(tvm: TracingVM):
+    tvm.load_binary_from_file('obj/asm/hello2.obj')
+    tvm.continue_()
+    assert tvm.reg_trace == [
+        [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
+        [12294, 0, 0, 0, 0, 0, 0, 0, 12289, 1],
+        [12294, 5, 0, 0, 0, 0, 0, 0, 12290, 1],
+        [12294, 5, 0, 0, 0, 0, 0, 0, 12291, 1],
+        [12294, 4, 0, 0, 0, 0, 0, 0, 12292, 1],
+        [12294, 4, 0, 0, 0, 0, 0, 0, 12290, 1],
+        [12294, 4, 0, 0, 0, 0, 0, 0, 12291, 1],
+        [12294, 3, 0, 0, 0, 0, 0, 0, 12292, 1],
+        [12294, 3, 0, 0, 0, 0, 0, 0, 12290, 1],
+        [12294, 3, 0, 0, 0, 0, 0, 0, 12291, 1],
+        [12294, 2, 0, 0, 0, 0, 0, 0, 12292, 1],
+        [12294, 2, 0, 0, 0, 0, 0, 0, 12290, 1],
+        [12294, 2, 0, 0, 0, 0, 0, 0, 12291, 1],
+        [12294, 1, 0, 0, 0, 0, 0, 0, 12292, 1],
+        [12294, 1, 0, 0, 0, 0, 0, 0, 12290, 1],
+        [12294, 1, 0, 0, 0, 0, 0, 0, 12291, 1],
+        [12294, 0, 0, 0, 0, 0, 0, 0, 12292, 2],
+        [12294, 0, 0, 0, 0, 0, 0, 0, 12293, 2],
+    ]
