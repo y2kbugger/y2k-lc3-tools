@@ -35,18 +35,17 @@ def parse_op(op):
     return ops.get(op >> 12)
 
 
-def main():
-    filename = sys.argv[1]
-    with open(filename, 'rb') as f:
-        origin = int.from_bytes(f.read(2), byteorder='big')
-        dump = array.array("H", [origin])
-        max_read = UINT16_MAX - origin
-        dump.frombytes(f.read(max_read))
-        dump.byteswap()
-        for op in dump[1:]:
-            print(f'{hex(origin)}: ({hex(op):>6}) {parse_op(op)} | {chr(op) if op < 256 else ""}')
-            origin += 1
+def disassemble(image_binary: bytes):
+    origin = int.from_bytes(image_binary[:2], byteorder='big')
+    dump = array.array("H", [origin])
 
-
-if __name__ == '__main__':
-    main()
+    max_read = (UINT16_MAX - origin) * 2
+    if len(image_binary[2:]) > max_read:
+        raise Exception("Image file too big to load.")
+    if len(image_binary[2:]) % 2 != 0:
+        raise Exception("Image file doesn't map to a whole number of 2 byte words.")
+    dump.frombytes(image_binary[2:])
+    dump.byteswap()
+    for op in dump[1:]:
+        print(f'{hex(origin)}: ({hex(op):>6}) {parse_op(op)} | {chr(op) if op < 256 else ""}')
+        origin += 1
