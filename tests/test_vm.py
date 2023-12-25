@@ -1,6 +1,6 @@
 import pytest
 
-from y2klc3tools.vm import VM, TracingVM, mem_read, UINT16_MAX
+from y2klc3tools.vm import VM, TracingVM, UINT16_MAX
 
 
 def test_load_binary():
@@ -9,7 +9,7 @@ def test_load_binary():
 
     vm.load_binary_from_hex(image_bytes)
 
-    assert mem_read(0x3000) == 0xE005
+    assert vm.memory[0x3000] == 0xE005
 
 
 def test_load_binary_memory_size_is_correct():
@@ -28,8 +28,8 @@ def test_load_binary_as_big_as_possible():
 
     vm.load_binary_from_hex(image_bytes)
 
-    assert mem_read(0x0000) == 0xDEAD
-    assert mem_read(0xFFFF) == 0xDEAD
+    assert vm.memory[0x0000] == 0xDEAD
+    assert vm.memory[0xFFFF] == 0xDEAD
 
 
 def test_load_binary_fails_when_too_big():

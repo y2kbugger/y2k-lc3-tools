@@ -13,10 +13,6 @@ from typing import Any
 UINT16_MAX = 2**16
 PC_START = 0x3000
 
-is_running = 1
-memory = None
-reg = None
-
 
 def getchar():
     fd = sys.stdin.fileno()
@@ -88,11 +84,11 @@ OPs implementaion
 """
 
 
-def bad_opcode(op):
+def bad_opcode(op, mem):
     raise Exception(f'Bad opcode: {op}')
 
 
-def add(instr):
+def add(instr, mem):
     # destination register (DR)
     r0 = (instr >> 9) & 0x7
     # first operand (SR1)
@@ -110,7 +106,7 @@ def add(instr):
     update_flags(r0)
 
 
-def ldi(instr):
+def ldi(instr, mem):
     """Load indirect"""
     # destination register (DR)
     r0 = (instr >> 9) & 0x7
@@ -118,11 +114,11 @@ def ldi(instr):
     pc_offset = sign_extend(instr & 0x1FF, 9)
     # add pc_offset to the current PC, look at that memory location to get
     # the final address
-    reg[r0] = mem_read(mem_read(reg[R.PC] + pc_offset))
+    reg[r0] = mem[mem[reg[R.PC] + pc_offset]]
     update_flags(r0)
 
 
-def and_(instr):
+def and_(instr, mem):
     r0 = (instr >> 9) & 0x7
     r1 = (instr >> 6) & 0x7
     r2 = instr & 0x7
@@ -137,26 +133,26 @@ def and_(instr):
     update_flags(r0)
 
 
-def not_(instr):
+def not_(instr, mem):
     r0 = (instr >> 9) & 0x7
     r1 = (instr >> 6) & 0x7
     reg[r0] = ~reg[r1]
     update_flags(r0)
 
 
-def br(instr):
+def br(instr, mem):
     pc_offset = sign_extend((instr) & 0x1FF, 9)
     cond_flag = (instr >> 9) & 0x7
     if cond_flag & reg[R.COND]:
         reg[R.PC] += pc_offset
 
 
-def jmp(instr):
+def jmp(instr, mem):
     r1 = (instr >> 6) & 0x7
     reg[R.PC] = reg[r1]
 
 
-def jsr(instr):
+def jsr(instr, mem):
     r1 = (instr >> 6) & 0x7
     long_pc_offset = sign_extend(instr & 0x7FF, 11)
     long_flag = (instr >> 11) & 1
@@ -168,45 +164,45 @@ def jsr(instr):
         reg[R.PC] = reg[r1]
 
 
-def ld(instr):
+def ld(instr, mem):
     r0 = (instr >> 9) & 0x7
     pc_offset = sign_extend(instr & 0x1FF, 9)
-    reg[r0] = mem_read(reg[R.PC] + pc_offset)
+    reg[r0] = mem[reg[R.PC] + pc_offset]
     update_flags(r0)
 
 
-def ldr(instr):
+def ldr(instr, mem):
     r0 = (instr >> 9) & 0x7
     r1 = (instr >> 6) & 0x7
     offset = sign_extend(instr & 0x3F, 6)
-    reg[r0] = mem_read(reg[r1] + offset)
+    reg[r0] = mem[reg[r1] + offset]
     update_flags(r0)
 
 
-def lea(instr):
+def lea(instr, mem):
     r0 = (instr >> 9) & 0x7
     pc_offset = sign_extend(instr & 0x1FF, 9)
     reg[r0] = reg[R.PC] + pc_offset
     update_flags(r0)
 
 
-def st(instr):
+def st(instr, mem):
     r0 = (instr >> 9) & 0x7
     pc_offset = sign_extend(instr & 0x1FF, 9)
-    mem_write(reg[R.PC] + pc_offset, reg[r0])
+    mem[reg[R.PC] + pc_offset, reg[r0]]
 
 
-def sti(instr):
+def sti(instr, mem):
     r0 = (instr >> 9) & 0x7
     pc_offset = sign_extend(instr & 0x1FF, 9)
-    mem_write(mem_read(reg[R.PC] + pc_offset), reg[r0])
+    mem[mem[reg[R.PC] + pc_offset], reg[r0]]
 
 
-def str_(instr):
+def str_(instr, mem):
     r0 = (instr >> 9) & 0x7
     r1 = (instr >> 6) & 0x7
     offset = sign_extend(instr & 0x3F, 6)
-    mem_write(reg[r1] + offset, reg[r0])
+    mem[reg[r1] + offset, reg[r0]]
 
 
 """
@@ -223,47 +219,47 @@ class Trap:
     HALT = 0x25  # halt the program
 
 
-def trap(instr):
-    traps.get(instr & 0xFF)()
+def trap(instr, mem):
+    traps.get(instr & 0xFF)(mem)
 
 
-def trap_putc():
+def trap_putc(mem):
     i = reg[R.R0]
-    c = memory[i]
+    c = mem[i]
     while c != 0:
         sys.stdout.write(c)
         i += 1
-        c = memory[i]
+        c = mem[i]
     sys.stdout.flush()
 
 
-def trap_getc():
+def trap_getc(mem):
     reg[R.R0] = ord(getchar())
 
 
-def trap_out():
+def trap_out(mem):
     sys.stdout.write(chr(reg[R.R0]))
     sys.stdout.flush()
 
 
-def trap_in():
+def trap_in(mem):
     sys.stdout.write("Enter a character: ")
     sys.stdout.flush()
     reg[R.R0] = sys.stdout.read(1)
 
 
-def trap_puts():
-    for i in range(reg[R.R0], len(memory)):
-        c = memory[i]
+def trap_puts(mem):
+    for i in range(reg[R.R0], len(mem)):
+        c = mem[i]
         if c == 0:
             break
         sys.stdout.write(chr(c))
     sys.stdout.flush()
 
 
-def trap_putsp():
-    for i in range(reg[R.R0], len(memory)):
-        c = memory[i]
+def trap_putsp(mem):
+    for i in range(reg[R.R0], len(mem)):
+        c = mem[i]
         if c == 0:
             break
         sys.stdout.write(chr(c & 0xFF))
@@ -273,7 +269,7 @@ def trap_putsp():
     sys.stdout.flush()
 
 
-def trap_halt():
+def trap_halt(mem):
     global is_running
     print('-- HALT --', file=sys.stderr)
     is_running = 0
@@ -308,33 +304,12 @@ ops = {
 }
 
 
-class Mr:
-    KBSR = 0xFE00  # keyboard status
-    KBDR = 0xFE02  # keyboard data
-
-
 def check_key():
     _, o, _ = select.select([], [sys.stdin], [], 0)
     for s in o:
         if s == sys.stdin:
             return True
     return False
-
-
-def mem_write(address, val):
-    address = address % UINT16_MAX
-    memory[address] = val
-
-
-def mem_read(address):
-    address = address % UINT16_MAX
-    if address == Mr.KBSR:
-        if check_key():
-            memory[Mr.KBSR] = 1 << 15
-            memory[Mr.KBDR] = ord(getchar())
-        else:
-            memory[Mr.KBSR] = 0
-    return memory[address]
 
 
 def sign_extend(x, bit_count):
@@ -352,16 +327,72 @@ def update_flags(r):
         reg[R.COND] = FL.POS
 
 
+class Memory:
+    def __init__(self):
+        self._memory = array.array("H", (0 for _ in range(UINT16_MAX)))
+
+    def load_binary(self, image_binary: bytes):
+        """Load a flat binary file into memory.
+
+        This function interprets the given binary data as an image file with a specific format and loads it into the global 'memory'. The binary format is expected as follows:
+
+        - Origin (2 bytes): The first two bytes specify the 'origin', i.e., the starting address in memory where the image data will be loaded. It's interpreted as a big-endian unsigned integer.
+        - Image Data (variable length): The rest of the binary data represents the image content.
+
+        Parameters:
+        image_binary: The binary data of the image to be loaded.
+
+        Raises:
+        Exception: If the image data exceeds the maximum allowable size for loading.
+        Exception: If the image doesn't map to a whole number of 2 byte words.
+        """
+
+        # pad front
+        origin = int.from_bytes(image_binary[:2], byteorder='big')
+        self._memory = array.array("H", (0 for _ in range(origin)))
+
+        # write image
+        max_read = (UINT16_MAX - origin) * 2
+        if len(image_binary[2:]) > max_read:
+            raise Exception("Image file too big to load.")
+        if len(image_binary[2:]) % 2 != 0:
+            raise Exception("Image file doesn't map to a whole number of 2 byte words.")
+        self._memory.frombytes(image_binary[2:])
+        self._memory.byteswap()
+
+        # pad back
+        self._memory.frombytes(b'\x00\x00' * (UINT16_MAX - len(self._memory)))
+
+    def __getitem__(self, address):
+        KBSR = 0xFE00  # keyboard status
+        KBDR = 0xFE02  # keyboard data
+
+        address = address % UINT16_MAX
+        if address == KBSR:
+            if check_key():
+                self._memory[KBSR] = 1 << 15
+                self._memory[KBDR] = ord(getchar())
+            else:
+                self._memory[KBSR] = 0
+        return self._memory[address]
+
+    def __setitem__(self, address, val):
+        address = address % UINT16_MAX
+        self._memory[address] = val
+
+    def __len__(self):
+        return len(self._memory)
+
+
 class VM:
+    def __init__(self):
+        self.is_running: bool = 1
+        self.memory: Memory = Memory()
+        self.reg: dict = None
+
     ###########################
     # PASSTHROUGH STUBS
     # these will eventually encapsulate state that is currently in globals
-
-    @property
-    def memory(self):
-        """todo: don't use global memory"""
-        global memory
-        return memory
 
     @property
     def R(self):
@@ -385,7 +416,7 @@ class VM:
         """Read the contents of a binary file into memory."""
         with open(file_path, 'rb') as f:
             bytes_read = f.read()
-        self.load_binary(bytes_read)
+        self.memory.load_binary(bytes_read)
 
     def load_binary_from_hex(self, image_binary_hex: str):
         """Load a flat binary file into memory.
@@ -394,40 +425,7 @@ class VM:
         image_binary_hex -- example: '0x3000DEAD'
         """
         image_binary = bytes.fromhex(image_binary_hex)
-        self.load_binary(image_binary)
-
-    def load_binary(self, image_binary: bytes):
-        """Load a flat binary file into memory.
-
-        This function interprets the given binary data as an image file with a specific format and loads it into the global 'memory'. The binary format is expected as follows:
-
-        - Origin (2 bytes): The first two bytes specify the 'origin', i.e., the starting address in memory where the image data will be loaded. It's interpreted as a big-endian unsigned integer.
-        - Image Data (variable length): The rest of the binary data represents the image content.
-
-        Parameters:
-        image_binary: The binary data of the image to be loaded.
-
-        Raises:
-        Exception: If the image data exceeds the maximum allowable size for loading.
-        Exception: If the image doesn't map to a whole number of 2 byte words.
-        """
-        global memory
-
-        # pad front
-        origin = int.from_bytes(image_binary[:2], byteorder='big')
-        memory = array.array("H", (0 for _ in range(origin)))
-
-        # write image
-        max_read = (UINT16_MAX - origin) * 2
-        if len(image_binary[2:]) > max_read:
-            raise Exception("Image file too big to load.")
-        if len(image_binary[2:]) % 2 != 0:
-            raise Exception("Image file doesn't map to a whole number of 2 byte words.")
-        memory.frombytes(image_binary[2:])
-        memory.byteswap()
-
-        # pad back
-        memory.frombytes(b'\x00\x00' * (UINT16_MAX - len(memory)))
+        self.memory.load_binary(image_binary)
 
     def reset(self):
         print('-- RESET --', file=sys.stderr)
@@ -442,11 +440,11 @@ class VM:
         if not is_running:
             print('-- HALTED --', file=sys.stderr)
             return
-        instr = mem_read(reg[R.PC])
+        instr = self.memory[reg[R.PC]]
         reg[R.PC] += 1
         op = instr >> 12
         fun = ops.get(op, bad_opcode)
-        fun(instr)
+        fun(instr, self.memory)
 
     def continue_(self):
         if not is_running:
@@ -459,6 +457,7 @@ class VM:
 class TracingVM(VM):
     def __init__(self):
         self.reg_trace = []
+        super().__init__()
 
     def step(self):
         global reg

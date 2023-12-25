@@ -14,7 +14,6 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 
 # Todo
 1. Simplify the vm code and make it more pythonic
-    - move all state int VM class
     - make definitions of opcodes and registers more pythonic
 1. Get the assembler working in my repo and running under pytest
     - tests for symbol table also (asm.dump_symbol_table convert to returning str)
