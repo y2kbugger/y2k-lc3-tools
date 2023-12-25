@@ -66,15 +66,47 @@ def vm_nops(vm: VM) -> VM:
     return vm
 
 
-def test_step_moves_pc_by_one(vm_nops: VM):
+def test_step_moves_pc_by_one(vm_nops: VM, capsys: pytest.CaptureFixture):
     pc_start = vm_nops.R.PC
 
     vm_nops.step()
 
+    captured = capsys.readouterr()
+    assert captured.err == ""
     assert vm_nops.R.PC == pc_start + 1
 
 
-def test_continue_runs_until_halted(vm_nops: VM):
+def test_continue_runs_until_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
     vm_nops.memory[0x3200] = 0xF025  # HLT
     vm_nops.continue_()
+    captured = capsys.readouterr()
+    assert captured.err == "-- HALT --\n"
     assert vm_nops.R.PC == 0x3200 + 1
+
+
+def test_step_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
+    vm_nops.memory[0x3200] = 0xF025  # HLT
+    vm_nops.continue_()
+    _ = capsys.readouterr()  # clear output
+    vm_nops.step()
+    captured = capsys.readouterr()
+    assert captured.err == "-- HALTED --\n"
+
+
+def test_continue_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
+    vm_nops.memory[0x3200] = 0xF025  # HLT
+    vm_nops.continue_()
+    _ = capsys.readouterr()  # clear output
+    vm_nops.continue_()
+    captured = capsys.readouterr()
+    assert captured.err == "-- HALTED --\n"
+
+
+def test_vm_can_run_looping_progam_with_output(vm: VM, capsys: pytest.CaptureFixture):
+    vm.load_binary_from_file('obj/asm/hello2.obj')
+    vm.continue_()
+    # check that the program output the expected string
+    captured = capsys.readouterr()
+    # assert captured.out == "hell0ddd"
+    assert captured.out == "Hello, World!\n" * 5
+    assert captured.err == "-- HALT --\n"

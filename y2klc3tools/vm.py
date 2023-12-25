@@ -275,7 +275,7 @@ def trap_putsp():
 
 def trap_halt():
     global is_running
-    print('-- HALT --')
+    print('-- HALT --', file=sys.stderr)
     is_running = 0
 
 
@@ -430,7 +430,7 @@ class VM:
         memory.frombytes(b'\x00\x00' * (UINT16_MAX - len(memory)))
 
     def reset(self):
-        print('-- RESET --')
+        print('-- RESET --', file=sys.stderr)
         global reg
         global is_running
         reg = register_dict({i: 0 for i in range(R.COUNT)})
@@ -440,7 +440,7 @@ class VM:
 
     def step(self):
         if not is_running:
-            print('-- HALTED --')
+            print('-- HALTED --', file=sys.stderr)
             return
         instr = mem_read(reg[R.PC])
         reg[R.PC] += 1
@@ -449,5 +449,8 @@ class VM:
         fun(instr)
 
     def continue_(self):
+        if not is_running:
+            print('-- HALTED --', file=sys.stderr)
+            return
         while is_running:
             self.step()
