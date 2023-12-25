@@ -74,6 +74,7 @@ def test_step_moves_pc_by_one(vm_nops: VM):
     assert vm_nops.R.PC == pc_start + 1
 
 
-# continue
-# step
-# halted
+def test_continue_runs_until_halted(vm_nops: VM):
+    vm_nops.memory[0x3200] = 0xF025  # HLT
+    vm_nops.continue_()
+    assert vm_nops.R.PC == 0x3200 + 1
