@@ -49,3 +49,18 @@ def disassemble(image_binary: bytes):
     for op in dump[1:]:
         print(f'{hex(origin)}: ({hex(op):>6}) {parse_op(op)} | {chr(op) if op < 256 else ""}')
         origin += 1
+
+
+def main():
+    if len(sys.argv) != 2:
+        print(f"Usage: {sys.argv[0]} <image file>")
+        sys.exit(1)
+
+    with open(sys.argv[1], 'rb') as f:
+        image_binary = f.read()
+
+    disassemble(image_binary)
+
+
+if __name__ == '__main__':
+    main()
