@@ -13,10 +13,9 @@ The notebooks are in the `notebooks` directory.
 Use the venv created by poetry to run the notebooks, one easy way is from within vscode.
 
 # Todo
-1. Simplify the vm code and make it more pythonic
-    - make definitions of opcodes and registers more pythonic
 1. Get the assembler working in my repo and running under pytest
     - tests for symbol table also (asm.dump_symbol_table convert to returning str)
+    - tests for escape sequences in stringz, e.g: `CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"`
 1. Improve disasm
     - pytests
     - Get .FILL correct
@@ -49,6 +48,11 @@ https://github.com/paul-nameless/lc3-vm.git
 ## Other Previous work
 original lc3 simulator tools and assembler
 CSU extension with push/pop
+
+# Errata of the original C tools
+## Assembler
+Does not support #1 immediate for branch (meaning skip next instruction, but python vm does)
+Does not correctly handle '\e' in stringz (renders as 'e' (0x65) instead of escape (0x1b))
 
 # Original README.md from the assembler
 ## Debug
