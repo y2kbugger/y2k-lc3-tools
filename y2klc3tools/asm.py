@@ -3,9 +3,9 @@ import sys
 
 from collections import namedtuple
 
+from . import UINT16_MAX
 
 MAX_LINE_LENGTH = 4096
-UINT16_MAX = 2**16
 
 
 REGS = {

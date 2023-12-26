@@ -2,8 +2,8 @@
 import array
 import sys
 
+from . import UINT16_MAX
 
-UINT16_MAX = 2**16
 
 ops = {
     0: 'BR',

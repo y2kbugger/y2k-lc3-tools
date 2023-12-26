@@ -1,6 +1,7 @@
 import pytest
 
-from y2klc3tools.vm import VM, TracingVM, UINT16_MAX
+from y2klc3tools import UINT16_MAX
+from y2klc3tools.vm import VM, TracingVM
 
 
 def test_load_binary():

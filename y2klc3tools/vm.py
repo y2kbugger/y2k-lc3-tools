@@ -8,9 +8,9 @@ import sys
 import termios
 import tty
 from typing import Any
+from . import UINT16_MAX
 
 
-UINT16_MAX = 2**16
 PC_START = 0x3000
 
 
