@@ -1,7 +1,25 @@
 import pytest
 
 from y2klc3tools import UINT16_MAX
-from y2klc3tools.vm import VM, TracingVM
+from y2klc3tools.vm import VM
+from y2klc3tools.sqlvm import SqlVM
+
+
+@pytest.fixture(params=[SqlVM, VM])
+def vm(request: pytest.FixtureRequest) -> VM:
+    IVM = request.param
+    vm = IVM()
+    vm.reset()
+    return vm
+
+
+@pytest.fixture()
+def vm_nops(vm: VM) -> VM:
+    """Load a program that does nothing but run add instructions repeatedly"""
+    origin = '0000'
+    image_bytes = origin + '16BF' * (UINT16_MAX)
+    vm.load_binary_from_hex(image_bytes)
+    return vm
 
 
 def test_load_binary():
@@ -51,22 +69,6 @@ def test_load_binary_fails_with_partial_word():
         vm.load_binary_from_hex(image_bytes)
 
 
-@pytest.fixture()
-def vm() -> VM:
-    vm = VM()
-    vm.reset()
-    return vm
-
-
-@pytest.fixture()
-def vm_nops(vm: VM) -> VM:
-    """Load a program that does nothing but run add instructions repeatedly"""
-    origin = '0000'
-    image_bytes = origin + '16BF' * (UINT16_MAX)
-    vm.load_binary_from_hex(image_bytes)
-    return vm
-
-
 def test_step_moves_pc_by_one(vm_nops: VM, capsys: pytest.CaptureFixture):
     pc_start = vm_nops.R.PC
 
@@ -113,17 +115,10 @@ def test_vm_can_run_looping_progam_with_output(vm: VM, capsys: pytest.CaptureFix
     assert captured.err == "-- HALT --\n"
 
 
-@pytest.fixture()
-def tvm() -> TracingVM:
-    tvm = TracingVM()
-    tvm.reset()
-    return tvm
-
-
-def test_tracing_vm_can_run_looping_progam_with_register_traces(tvm: TracingVM):
-    tvm.load_binary_from_file('obj/asm/hello2.obj')
-    tvm.continue_()
-    assert tvm.reg_trace == [
+def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
+    vm.load_binary_from_file('obj/asm/hello2.obj')
+    vm.continue_()
+    assert vm.reg_trace == [
         [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
         [12294, 0, 0, 0, 0, 0, 0, 0, 12289, 1],
         [12294, 5, 0, 0, 0, 0, 0, 0, 12290, 1],
