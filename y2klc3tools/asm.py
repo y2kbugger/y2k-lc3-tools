@@ -1,4 +1,5 @@
 import array
+import sys
 
 from collections import namedtuple
 
@@ -181,7 +182,7 @@ def asm_pass_one(code):
         if tokens[0].v == '.END':
             break
 
-        print(f'{hex(lc):>6} ({line_number}): {line.strip():<44} | {tokens}')
+        print(f'{hex(lc):>6} ({line_number}): {line.strip():<44} | {tokens}', file=sys.stderr)
         check_syntax(tokens)
 
         if tokens[0].t == Type.LABEL:
@@ -194,7 +195,7 @@ def asm_pass_one(code):
 
         lines.append((tokens, lc))
 
-    print('LC:', hex(lc))
+    print('LC:', hex(lc), file=sys.stderr)
     return symbol_table, lines
 
 
@@ -305,7 +306,7 @@ def asm_pass_two(symbol_table, lines):
     for tokens, lc in lines[1:]:
         if tokens[0].v == '.END':
             break
-        print(tokens)
+        print(tokens, file=sys.stderr)
 
         if tokens[0].t != Type.LABEL:
             CONDS[tokens[0].v](tokens, data, symbol_table, lc)
@@ -317,17 +318,46 @@ def asm_pass_two(symbol_table, lines):
 
 
 def dump_symbol_table(symbol_table):
-    with open('out.sym', 'w') as f:
-        f.write('\n\n\n\n')
-        for a, b in symbol_table.items():
-            f.write(f'//\t{a:<16}  {hex(b)[2:].upper()}\n')
+    lines = [
+        "// Symbol table\n",
+        "// Scope level 0:\n",
+        "//	Symbol Name       Page Address\n",
+        "//	----------------  ------------\n",
+    ]
+    for sym, addr in symbol_table.items():
+        lines.append(f'//\t{sym:<16}  {hex(addr)[2:].upper()}\n')
+    return "".join(lines)
 
 
 def assemble(code: str):
-    print('STARTING ASSEMBLY PASS 1')
+    print('STARTING ASSEMBLY PASS 1', file=sys.stderr)
     symbol_table, lines = asm_pass_one(code)
 
-    print('STARTING ASSEMBLY PASS 2')
+    print('STARTING ASSEMBLY PASS 2', file=sys.stderr)
     bin_data = asm_pass_two(symbol_table, lines)
 
     return symbol_table, bin_data.tobytes()
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Assemble an assembly file. By defaults writes the object binary to stdout.'
+    )
+    parser.add_argument('file', type=str, help='assembly file to assemble')
+
+    args = parser.parse_args()
+    with open(args.file, 'r') as f:
+        code = f.read()
+
+    symbol_table, bin_data = assemble(code)
+
+    with open(args.file.replace('.asm', '.obj'), 'wb') as f:
+        f.write(bin_data)
+    with open(args.file.replace('.asm', '.sym'), 'w') as f:
+        f.write(dump_symbol_table(symbol_table))
+
+
+if __name__ == '__main__':
+    main()
