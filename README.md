@@ -20,7 +20,6 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 
 # Todo
 1. Get the assembler working in my repo and running under pytest
-    - tests for symbol table also (asm.dump_symbol_table convert to returning str)
     - tests for escape sequences in stringz, e.g: `CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"`
 1. Improve disasm
     - pytests
@@ -30,13 +29,11 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. combine info from all three readme's into one. including history of the projects, e.g. CSU extension with push/pop
 1. Document that the original assmember was written in C and had poor cli interface and gui was in tcl and also odd.
 1. Document that the original has an acutual operating system written in LC-3 assembly, but our vm stubs out the traps with python
-1. Make a nice api for debugging out vm register traces
-1. Add unit tests for vm register traces
 1. Get C compiler running in notebook
 1. Move C compiler tests to use pytest
 1. Make C compiler tests use the pure python assembler and vm
 1. Remove the dependencies that I installed for the c compiler (bats and moreutils)
-1. Convert compiler to use origial multi instruction push and pop
+1. Convert compiler to use origial multi instruction push and pop, or implement push and pop for the vm
 1. Recreate a holistic CLI interface for the assembler, vm, and C compiler
 
 # Previous work
