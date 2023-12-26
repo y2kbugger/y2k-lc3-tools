@@ -1,0 +1,3 @@
+[diff "hex"]
+	textconv = python -m y2klc3tools.disasm
+	binary = true

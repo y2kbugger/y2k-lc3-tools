@@ -5,7 +5,13 @@
 
 # Development
 ## Running Tests
+
     poetry run pytest
+
+## Diffing binary files
+Enable custom textconv for git
+
+    git config --local include.path ../.gitconfig
 
 ## Notebooks
 The notebooks are in the `notebooks` directory.
