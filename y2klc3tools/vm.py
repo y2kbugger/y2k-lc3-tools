@@ -385,7 +385,9 @@ class Memory:
 
 
 class VM:
-    def __init__(self):
+    def __init__(self, tracing=False):
+        self.tracing = tracing
+        self.reg_trace = []
         self.is_running: bool = 1
         self.memory: Memory = Memory()
         self.reg: dict = None
@@ -440,6 +442,10 @@ class VM:
         if not is_running:
             print('-- HALTED --', file=sys.stderr)
             return
+
+        if self.tracing:
+            self.reg_trace.append(list(reg.values()))
+
         instr = self.memory[reg[R.PC]]
         reg[R.PC] += 1
         op = instr >> 12
@@ -452,14 +458,3 @@ class VM:
             return
         while is_running:
             self.step()
-
-
-class TracingVM(VM):
-    def __init__(self):
-        self.reg_trace = []
-        super().__init__()
-
-    def step(self):
-        global reg
-        self.reg_trace.append(list(reg.values()))
-        super().step()

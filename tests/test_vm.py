@@ -1,59 +1,14 @@
 import pytest
 
 from y2klc3tools import UINT16_MAX
-from y2klc3tools.vm import VM, TracingVM
+from y2klc3tools.vm import VM
+from y2klc3tools.sqlvm import SqlVM
 
 
-def test_load_binary():
-    image_bytes = '3000 E005 2213'
-    vm = VM()
-
-    vm.load_binary_from_hex(image_bytes)
-
-    assert vm.memory[0x3000] == 0xE005
-
-
-def test_load_binary_memory_size_is_correct():
-    image_bytes = '3000 E005 2213'
-    vm = VM()
-
-    vm.load_binary_from_hex(image_bytes)
-
-    assert len(vm.memory) == UINT16_MAX
-
-
-def test_load_binary_as_big_as_possible():
-    origin = '0000'
-    image_bytes = origin + 'DEAD' * UINT16_MAX
-    vm = VM()
-
-    vm.load_binary_from_hex(image_bytes)
-
-    assert vm.memory[0x0000] == 0xDEAD
-    assert vm.memory[0xFFFF] == 0xDEAD
-
-
-def test_load_binary_fails_when_too_big():
-    origin = '0000'
-    image_bytes = origin + 'DEAD' * (UINT16_MAX + 1)
-    vm = VM()
-
-    with pytest.raises(Exception, match="too big"):
-        vm.load_binary_from_hex(image_bytes)
-
-
-def test_load_binary_fails_with_partial_word():
-    origin = '0000'
-    image_bytes = origin + 'DEAD EE'
-    vm = VM()
-
-    with pytest.raises(Exception, match="2 byte words"):
-        vm.load_binary_from_hex(image_bytes)
-
-
-@pytest.fixture()
-def vm() -> VM:
-    vm = VM()
+@pytest.fixture(params=[SqlVM, VM])
+def vm(request: pytest.FixtureRequest) -> VM:
+    IVM = request.param
+    vm = IVM()
     vm.reset()
     return vm
 
@@ -65,6 +20,48 @@ def vm_nops(vm: VM) -> VM:
     image_bytes = origin + '16BF' * (UINT16_MAX)
     vm.load_binary_from_hex(image_bytes)
     return vm
+
+
+def test_load_binary(vm: VM):
+    image_bytes = '3000 E005 2213'
+
+    vm.load_binary_from_hex(image_bytes)
+
+    assert vm.memory[0x3000] == 0xE005
+
+
+def test_load_binary_memory_size_is_correct(vm: VM):
+    image_bytes = '3000 E005 2213'
+
+    vm.load_binary_from_hex(image_bytes)
+
+    assert len(vm.memory) == UINT16_MAX
+
+
+def test_load_binary_as_big_as_possible(vm: VM):
+    origin = '0000'
+    image_bytes = origin + 'DEAD' * UINT16_MAX
+
+    vm.load_binary_from_hex(image_bytes)
+
+    assert vm.memory[0x0000] == 0xDEAD
+    assert vm.memory[0xFFFF] == 0xDEAD
+
+
+def test_load_binary_fails_when_too_big(vm: VM):
+    origin = '0000'
+    image_bytes = origin + 'DEAD' * (UINT16_MAX + 1)
+
+    with pytest.raises(Exception, match="too big"):
+        vm.load_binary_from_hex(image_bytes)
+
+
+def test_load_binary_fails_with_partial_word(vm: VM):
+    origin = '0000'
+    image_bytes = origin + 'DEAD EE'
+
+    with pytest.raises(Exception, match="2 byte words"):
+        vm.load_binary_from_hex(image_bytes)
 
 
 def test_step_moves_pc_by_one(vm_nops: VM, capsys: pytest.CaptureFixture):
@@ -113,17 +110,10 @@ def test_vm_can_run_looping_progam_with_output(vm: VM, capsys: pytest.CaptureFix
     assert captured.err == "-- HALT --\n"
 
 
-@pytest.fixture()
-def tvm() -> TracingVM:
-    tvm = TracingVM()
-    tvm.reset()
-    return tvm
-
-
-def test_tracing_vm_can_run_looping_progam_with_register_traces(tvm: TracingVM):
-    tvm.load_binary_from_file('obj/asm/hello2.obj')
-    tvm.continue_()
-    assert tvm.reg_trace == [
+def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
+    vm.load_binary_from_file('obj/asm/hello2.obj')
+    vm.continue_()
+    assert vm.reg_trace == [
         [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
         [12294, 0, 0, 0, 0, 0, 0, 0, 12289, 1],
         [12294, 5, 0, 0, 0, 0, 0, 0, 12290, 1],
