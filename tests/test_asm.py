@@ -11,6 +11,7 @@ test_cases = [os.path.splitext(os.path.basename(f))[0] for f in asm_files]
 
 @pytest.mark.parametrize('case', test_cases)
 def test_asm_files(case):
+    # TODO: split this into obj and sym tests and give better name
     with open(test_case_dir / f'{case}.asm', 'r') as f:
         asm = f.read()
 
@@ -25,5 +26,6 @@ def test_asm_files(case):
             expected_symbol_table = f.read()
         assert dump_symbol_table(symbol_table) == expected_symbol_table
     except FileNotFoundError:
-        # no testcase for this asm file
+        # no symbol testcase for this asm file
+        # TODO: ensure all asm files have a corresponding sym file
         pass
