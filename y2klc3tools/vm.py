@@ -1,6 +1,8 @@
 """
-Implementation of virtual machine for LC-3 assembly language in python
+virtual machine for LC-3 assembly language in python
 """
+
+from __future__ import annotations
 
 import array
 from collections.abc import Callable
@@ -48,9 +50,7 @@ class register_dict(dict):
         super().__setitem__(key, value % UINT16_MAX)
 
 
-class OP:
-    """opcode"""
-
+class OP(Enum):
     BR = 0  # branch
     ADD = 1  # add
     LD = 2  # load
@@ -78,16 +78,12 @@ class FL:
     NEG = 1 << 2  # N
 
 
-"""
-OPs implementaion
-"""
+### OPs implementaion
+def bad_opcode(instr):
+    raise Exception(f'Bad opcode: {instr}')
 
 
-def bad_opcode(op, mem):
-    raise Exception(f'Bad opcode: {op}')
-
-
-def add(instr, mem):
+def add(instr):
     # destination register (DR)
     r0 = (instr >> 9) & 0x7
     # first operand (SR1)
@@ -117,7 +113,7 @@ def ldi(instr, mem):
     update_flags(r0)
 
 
-def and_(instr, mem):
+def and_(instr):
     r0 = (instr >> 9) & 0x7
     r1 = (instr >> 6) & 0x7
     r2 = instr & 0x7
@@ -132,26 +128,26 @@ def and_(instr, mem):
     update_flags(r0)
 
 
-def not_(instr, mem):
+def not_(instr):
     r0 = (instr >> 9) & 0x7
     r1 = (instr >> 6) & 0x7
     reg[r0] = ~reg[r1]
     update_flags(r0)
 
 
-def br(instr, mem):
+def br(instr):
     pc_offset = sign_extend((instr) & 0x1FF, 9)
     cond_flag = (instr >> 9) & 0x7
     if cond_flag & reg[R.COND]:
         reg[R.PC] += pc_offset
 
 
-def jmp(instr, mem):
+def jmp(instr):
     r1 = (instr >> 6) & 0x7
     reg[R.PC] = reg[r1]
 
 
-def jsr(instr, mem):
+def jsr(instr):
     r1 = (instr >> 6) & 0x7
     long_pc_offset = sign_extend(instr & 0x7FF, 11)
     long_flag = (instr >> 11) & 1
@@ -178,7 +174,7 @@ def ldr(instr, mem):
     update_flags(r0)
 
 
-def lea(instr, mem):
+def lea(instr):
     r0 = (instr >> 9) & 0x7
     pc_offset = sign_extend(instr & 0x1FF, 9)
     reg[r0] = reg[R.PC] + pc_offset
@@ -204,37 +200,33 @@ def str_(instr, mem):
     mem[reg[r1] + offset, reg[r0]]
 
 
-"""
-TRAPs implementation
-"""
-
-
-def trap_putc(mem):
+### TRAPs implementation
+def trap_putc(mem: Memory):
     i = reg[R.R0]
     c = mem[i]
     while c != 0:
-        sys.stdout.write(c)
+        sys.stdout.write(chr(c))
         i += 1
         c = mem[i]
     sys.stdout.flush()
 
 
-def trap_getc(mem):
+def trap_getc():
     reg[R.R0] = ord(getchar())
 
 
-def trap_out(mem):
+def trap_out():
     sys.stdout.write(chr(reg[R.R0]))
     sys.stdout.flush()
 
 
-def trap_in(mem):
+def trap_in():
     sys.stdout.write("Enter a character: ")
     sys.stdout.flush()
     reg[R.R0] = sys.stdout.read(1)
 
 
-def trap_puts(mem):
+def trap_puts(mem: Memory):
     for i in range(reg[R.R0], len(mem)):
         c = mem[i]
         if c == 0:
@@ -243,7 +235,7 @@ def trap_puts(mem):
     sys.stdout.flush()
 
 
-def trap_putsp(mem):
+def trap_putsp(mem: Memory):
     for i in range(reg[R.R0], len(mem)):
         c = mem[i]
         if c == 0:
@@ -255,10 +247,9 @@ def trap_putsp(mem):
     sys.stdout.flush()
 
 
-def trap_halt(mem):
-    global is_running
+def trap_halt(runstate: RunningState):
     print('-- HALT --', file=sys.stderr)
-    is_running = 0
+    runstate.halt()
 
 
 class Trap(Enum):
@@ -270,38 +261,21 @@ class Trap(Enum):
     HALT = 0x25  # halt the program
 
 
-type TrapHandler = Callable[[array.array], None]
-traps: dict[Trap, TrapHandler] = {
-    Trap.GETC: trap_getc,
-    Trap.OUT: trap_out,
-    Trap.PUTS: trap_puts,
-    Trap.IN: trap_in,
-    Trap.PUTSP: trap_putsp,
-    Trap.HALT: trap_halt,
-}
+def trap(instr, mem: Memory, runstate: RunningState):
+    t = Trap(instr & 0xFF)
 
-
-def trap(instr, mem):
-    traps[Trap(instr & 0xFF)](mem)
-
-
-ops = {
-    OP.ADD: add,
-    OP.NOT: not_,
-    OP.AND: and_,
-    OP.BR: br,
-    OP.JMP: jmp,
-    OP.RET: jmp,
-    OP.JSR: jsr,
-    OP.LD: ld,
-    OP.LDI: ldi,
-    OP.LDR: ldr,
-    OP.LEA: lea,
-    OP.ST: st,
-    OP.STI: sti,
-    OP.STR: str_,
-    OP.TRAP: trap,
-}
+    if t == Trap.GETC:
+        trap_getc()
+    elif t == Trap.OUT:
+        trap_out()
+    elif t == Trap.PUTS:
+        trap_puts(mem)
+    elif t == Trap.IN:
+        trap_in()
+    elif t == Trap.PUTSP:
+        trap_putsp(mem)
+    elif t == Trap.HALT:
+        trap_halt(runstate)
 
 
 def check_key():
@@ -384,12 +358,26 @@ class Memory:
         return len(self._memory)
 
 
+class RunningState:
+    def __init__(self):
+        self._is_running: bool = False
+
+    def is_running(self):
+        return self._is_running
+
+    def halt(self):
+        self._is_running = False
+
+    def run(self):
+        self._is_running = True
+
+
 class VM:
     def __init__(self, tracing=False):
         self.tracing = tracing
         self.reg_trace = []
-        self.is_running: bool = 1
         self.memory: Memory = Memory()
+        self.runstate: RunningState = RunningState()
         self.reg: dict = None
 
     ###########################
@@ -432,14 +420,13 @@ class VM:
     def reset(self):
         print('-- RESET --', file=sys.stderr)
         global reg
-        global is_running
         reg = register_dict({i: 0 for i in range(R.COUNT)})
         reg[R.PC] = PC_START
         reg[R.COND] = FL.POS
-        is_running = 1
+        self.runstate.run()
 
     def step(self):
-        if not is_running:
+        if not self.runstate.is_running():
             print('-- HALTED --', file=sys.stderr)
             return
 
@@ -448,13 +435,44 @@ class VM:
 
         instr = self.memory[reg[R.PC]]
         reg[R.PC] += 1
-        op = instr >> 12
-        fun = ops.get(op, bad_opcode)
-        fun(instr, self.memory)
+        op = OP(instr >> 12)
+
+        if op == OP.ADD:
+            add(instr)
+        elif op == OP.NOT:
+            not_(instr)
+        elif op == OP.AND:
+            and_(instr)
+        elif op == OP.BR:
+            br(instr)
+        elif op == OP.JMP:
+            jmp(instr)
+        elif op == OP.RET:
+            jmp(instr)
+        elif op == OP.JSR:
+            jsr(instr)
+        elif op == OP.LD:
+            ld(instr, self.memory)
+        elif op == OP.LDI:
+            ldi(instr, self.memory)
+        elif op == OP.LDR:
+            ldr(instr, self.memory)
+        elif op == OP.LEA:
+            lea(instr)
+        elif op == OP.ST:
+            st(instr, self.memory)
+        elif op == OP.STI:
+            sti(instr, self.memory)
+        elif op == OP.STR:
+            str_(instr, self.memory)
+        elif op == OP.TRAP:
+            trap(instr, self.memory, self.runstate)
+        else:
+            bad_opcode(instr)
 
     def continue_(self):
-        if not is_running:
+        if not self.runstate.is_running():
             print('-- HALTED --', file=sys.stderr)
             return
-        while is_running:
+        while self.runstate.is_running():
             self.step()
