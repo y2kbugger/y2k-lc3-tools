@@ -112,6 +112,7 @@ def test_vm_can_run_looping_progam_with_output(vm: VM, capsys: pytest.CaptureFix
 
 def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
     vm.load_binary_from_file('obj/asm/hello2.obj')
+    vm.tracing = True
     vm.continue_()
     assert vm.reg_trace == [
         [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
