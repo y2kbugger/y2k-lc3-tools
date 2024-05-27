@@ -10,10 +10,7 @@ import sys
 import termios
 import tty
 from typing import Any
-from . import UINT16_MAX
-
-
-PC_START = 0x3000
+from . import UINT16_MAX, PC_START
 
 
 def getchar():
