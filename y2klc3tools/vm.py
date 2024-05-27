@@ -3,6 +3,8 @@ Implementation of virtual machine for LC-3 assembly language in python
 """
 
 import array
+from collections.abc import Callable
+from enum import Enum
 import select
 import sys
 import termios
@@ -210,19 +212,6 @@ TRAPs implementation
 """
 
 
-class Trap:
-    GETC = 0x20  # get character from keyboard
-    OUT = 0x21  # output a character
-    PUTS = 0x22  # output a word string
-    IN = 0x23  # input a string
-    PUTSP = 0x24  # output a byte string
-    HALT = 0x25  # halt the program
-
-
-def trap(instr, mem):
-    traps.get(instr & 0xFF)(mem)
-
-
 def trap_putc(mem):
     i = reg[R.R0]
     c = mem[i]
@@ -275,7 +264,17 @@ def trap_halt(mem):
     is_running = 0
 
 
-traps = {
+class Trap(Enum):
+    GETC = 0x20  # get character from keyboard
+    OUT = 0x21  # output a character
+    PUTS = 0x22  # output a word string
+    IN = 0x23  # input a string
+    PUTSP = 0x24  # output a byte string
+    HALT = 0x25  # halt the program
+
+
+type TrapHandler = Callable[[array.array], None]
+traps: dict[Trap, TrapHandler] = {
     Trap.GETC: trap_getc,
     Trap.OUT: trap_out,
     Trap.PUTS: trap_puts,
@@ -283,6 +282,10 @@ traps = {
     Trap.PUTSP: trap_putsp,
     Trap.HALT: trap_halt,
 }
+
+
+def trap(instr, mem):
+    traps[Trap(instr & 0xFF)](mem)
 
 
 ops = {
