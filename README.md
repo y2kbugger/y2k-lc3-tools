@@ -19,8 +19,20 @@ The notebooks are in the `notebooks` directory.
 Use the venv created by poetry to run the notebooks, one easy way is from within vscode.
 
 # Todo
+1. sqlvm
+    - make is_running, and tracing signals in table, pass through as properties
+    - capture stdout and stderr in table
+    - print out stdout and stderr from table
+    - push all HALTED and RESET messages into SQL
+1. Add test for vm
+    - reading from memory
+    - reading from registers
+    - smaller tests for runnng each instruction
+1. Harmonize python linting/precommit/todos/formatting/etc with my other project
+1. Somehow ensure that all sql statements can be exported as script instead executing
 1. Get the assembler working in my repo and running under pytest
     - tests for escape sequences in stringz, e.g: `CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"`
+1. Move register state into VM class
 1. Improve disasm
     - pytests
     - Get .FILL correct
@@ -38,16 +50,20 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 
 # Previous work
 I have modernized the tooling and combined multiple projects for the LC-3 into one repo. The original projects are listed below, and I have included the commit hash of the last commit I pulled from each repo, incase I want to merge in later upstream changes.
+
 ## The C compiler for the LC-3
 https://github.com/nickodell/lc3-cc
 8d41f34 Update documentation
 Nickodell's version was, in turn, inspired by [this tutorial](https://github.com/justinmeiners/lc3-vm).
+
 ## The LC-3 assembler
 https://github.com/paul-nameless/lc3-asm.git
 38ac008 Rewrite bunch of IFs in dict condision (why? I see so) Fix disasm
+
 ## The LC-3 simulator
 https://github.com/paul-nameless/lc3-vm.git
 88bdc83
+
 ## Other Previous work
 original lc3 simulator tools and assembler
 CSU extension with push/pop
