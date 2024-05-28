@@ -1,7 +1,7 @@
 import pytest
 
 from y2klc3tools import UINT16_MAX
-from y2klc3tools.vm import VM
+from y2klc3tools.vm import VM, R
 from y2klc3tools.sqlvm import SqlVM
 
 
@@ -65,13 +65,13 @@ def test_load_binary_fails_with_partial_word(vm: VM):
 
 
 def test_step_moves_pc_by_one(vm_nops: VM, capsys: pytest.CaptureFixture):
-    pc_start = vm_nops.R.PC
+    pc_start = vm_nops.reg[R.PC]
 
     vm_nops.step()
 
     captured = capsys.readouterr()
     assert captured.err == ""
-    assert vm_nops.R.PC == pc_start + 1
+    assert vm_nops.reg[R.PC] == pc_start + 1
 
 
 def test_continue_runs_until_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
@@ -79,7 +79,7 @@ def test_continue_runs_until_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
     vm_nops.continue_()
     captured = capsys.readouterr()
     assert captured.err == "-- HALT --\n"
-    assert vm_nops.R.PC == 0x3200 + 1
+    assert vm_nops.reg[R.PC] == 0x3200 + 1
 
 
 def test_step_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
