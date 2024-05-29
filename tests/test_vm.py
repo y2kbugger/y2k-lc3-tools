@@ -134,3 +134,51 @@ def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
         [12294, 0, 0, 0, 0, 0, 0, 0, 12292, 2],
         [12294, 0, 0, 0, 0, 0, 0, 0, 12293, 2],
     ]
+
+
+def test_tracing_vm_can_run_looping_progam_with_register_traces2(vm: VM):
+    vm.load_binary_from_file('obj/asm/hard.obj')
+    vm.tracing = True
+    vm.continue_()
+    assert vm.reg_trace == [
+        [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 12289, 2],
+        [0, 0, 0, 65531, 0, 0, 0, 0, 12290, 4],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12291, 1],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12292, 2],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12293, 2],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12294, 2],
+        [0, 0, 0, 15, 0, 0, 0, 65535, 12295, 4],
+    ]
+
+
+def test_tracing_vm_can_run_looping_progam_with_register_traces3(vm: VM):
+    vm.load_binary_from_file('obj/asm/legal.obj')
+    vm.tracing = True
+    vm.continue_()
+    assert vm.reg_trace == [
+        [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 12289, 2],
+        [0, 0, 0, 65531, 0, 0, 0, 0, 12290, 4],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12291, 1],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12292, 2],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12293, 2],
+        [0, 0, 0, 15, 0, 0, 0, 0, 12294, 2],
+        [0, 0, 0, 15, 0, 0, 0, 65535, 12295, 4],
+    ]
+
+
+def test_tracing_vm_can_run_looping_progam_with_register_traces4(vm: VM):
+    vm.load_binary_from_file('obj/asm/instructions.obj')
+    vm.tracing = True
+    vm.continue_()
+    assert vm.reg_trace == [
+        [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 12289, 2],
+        [0, 0, 0, 65531, 0, 0, 0, 0, 12290, 4],
+        [0, 0, 0, 65535, 0, 0, 0, 0, 12291, 4],
+        [0, 0, 0, 65535, 0, 0, 0, 0, 12292, 2],
+        [0, 0, 0, 65535, 0, 0, 0, 0, 12293, 2],
+        [0, 0, 0, 65535, 0, 0, 0, 0, 12294, 2],
+        [0, 0, 0, 65535, 0, 0, 0, 65535, 12295, 4],
+    ]
