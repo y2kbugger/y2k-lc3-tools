@@ -64,14 +64,13 @@ BEGIN
     INSERT INTO trace VALUES ('reading instruction from memory...');
     UPDATE signal
         SET instr = (
-            (SELECT value FROM memory WHERE address = (SELECT PC FROM register)) << 8 |
-            (SELECT value FROM memory WHERE address = (SELECT PC FROM register) + 1)
+            (SELECT value FROM memory WHERE address = (SELECT PC FROM register))
         );
 
     -- Update PC in register table based on falling edge detection
     INSERT INTO trace VALUES ('incrementing PC...');
     UPDATE register
-        SET PC = PC + 2;
+        SET PC = PC + 1;
 END;
 
 -- ################################
