@@ -15,23 +15,32 @@ class R(Enum):
 
 
 class OP(Enum):
-    BR = 0  # branch
-    ADD = 1  # add
-    LD = 2  # load
-    ST = 3  # store
-    JSR = 4  # jump register
-    AND = 5  # bitwise and
-    LDR = 6  # load register
-    STR = 7  # store register
-    RTI = 8  # unused
-    NOT = 9  # bitwise not
-    LDI = 10  # load indirect
-    STI = 11  # store indirect
-    RET = 12  # jump
-    JMP = 12  # jump
-    RES = 13  # reserved (unused)
-    LEA = 14  # load effective address
-    TRAP = 15  # execute trap
+    BR = 0x0  # branch
+    ADD = 0x1  # add
+    LD = 0x2  # load
+    ST = 0x3  # store
+    JSR = 0x4  # jump register
+    AND = 0x5  # bitwise and
+    LDR = 0x6  # load register
+    STR = 0x7  # store register
+    RTI = 0x8  # unused
+    NOT = 0x9  # bitwise not
+    LDI = 0xA  # load indirect
+    STI = 0xB  # store indirect
+    RET = 0xC  # jump
+    JMP = 0xC  # jump
+    RES = 0xD  # reserved (unused)
+    LEA = 0xE  # load effective address
+    TRAP = 0xF  # execute trap
+
+
+class Trap(Enum):
+    GETC = 0x20  # get character from keyboard
+    OUT = 0x21  # output a character
+    PUTS = 0x22  # output a word string
+    IN = 0x23  # input a string
+    PUTSP = 0x24  # output a byte string
+    HALT = 0x25  # halt the program
 
 
 class FL(Enum):

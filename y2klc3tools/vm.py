@@ -8,7 +8,7 @@ import termios
 import tty
 
 from . import UINT16_MAX, PC_START
-from .vm_def import R, OP, FL
+from .vm_def import R, OP, FL, Trap
 
 
 def getchar():
@@ -207,15 +207,6 @@ def trap_putsp(mem: Memory, reg: Registers):
 def trap_halt(runstate: RunningState):
     print('-- HALT --', file=sys.stderr)
     runstate.halt()
-
-
-class Trap(Enum):
-    GETC = 0x20  # get character from keyboard
-    OUT = 0x21  # output a character
-    PUTS = 0x22  # output a word string
-    IN = 0x23  # input a string
-    PUTSP = 0x24  # output a byte string
-    HALT = 0x25  # halt the program
 
 
 def trap(instr, mem: Memory, runstate: RunningState, reg: Registers):
