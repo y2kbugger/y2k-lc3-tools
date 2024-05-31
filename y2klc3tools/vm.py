@@ -344,13 +344,17 @@ class VM:
         self.memory.load_binary(bytes_read)
 
     def load_binary_from_hex(self, image_binary_hex: str):
-        """Load a flat binary file into memory.
+        """Load a flat binary hex file into memory.
 
         Parameters:
         image_binary_hex -- example: '0x3000DEAD'
         """
         image_binary = bytes.fromhex(image_binary_hex)
         self.memory.load_binary(image_binary)
+
+    def load_binary_from_bytes(self, image_binary_bytes: bytes):
+        """Load bytes directly into memory."""
+        self.memory.load_binary(image_binary_bytes)
 
     def reset(self):
         print('-- RESET --', file=sys.stderr)

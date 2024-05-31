@@ -173,6 +173,10 @@ class SqlVM:
         image_binary = bytes.fromhex(image_binary_hex)
         self.memory.load_binary(image_binary)
 
+    def load_binary_from_bytes(self, image_binary_bytes: bytes):
+        """Load bytes directly into memory."""
+        self.memory.load_binary(image_binary_bytes)
+
     def reset(self):
         print('-- RESET --', file=sys.stderr)
         self.reg[R.R0] = 0

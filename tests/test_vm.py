@@ -30,6 +30,15 @@ def test_load_binary(vm: VM):
     assert vm.memory[0x3000] == 0xE005
 
 
+def test_load_binary_bytes(vm: VM):
+    image_bytes_hex = '3000 E005 2213'
+    image_bytes = bytes.fromhex(image_bytes_hex)
+
+    vm.load_binary_from_bytes(image_bytes)
+
+    assert vm.memory[0x3000] == 0xE005
+
+
 def test_load_binary_memory_size_is_correct(vm: VM):
     image_bytes = '3000 E005 2213'
 
