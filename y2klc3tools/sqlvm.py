@@ -5,6 +5,7 @@ import sys
 from typing import Any
 
 from . import UINT16_MAX, PC_START
+from .vm_def import OP, R, FL
 
 import sqlparse
 from tabulate import tabulate
@@ -71,71 +72,63 @@ class SqlMemory:
 
 
 class SqlRegisters:
-    reg_names = [
-        "R0",
-        "R1",
-        "R2",
-        "R3",
-        "R4",
-        "R5",
-        "R6",
-        "R7",
-        "PC",
-        "COND",
-        "COUNT",
-    ]
-
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
 
-    def __getattr__(self, __name: str) -> Any:
-        if __name not in self.reg_names:
-            return super().__getattr__(__name)
-        sql = f"SELECT {__name} FROM register"
+    def __getitem__(self, __name: R) -> Any:
+        if not isinstance(__name, R):
+            raise AttributeError(f"Invalid Register {__name}")
+        sql = f"SELECT {__name.name} FROM register"
         cur = self.conn.execute(sql)
         return cur.fetchone()[0]
 
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        if __name not in self.reg_names:
-            return super().__setattr__(__name, __value)
-        sql = f"UPDATE register SET {__name} = ?"
-        self.conn.execute(sql, (__value,))
+    def __setitem__(self, __name: R, __value: int) -> None:
+        if not isinstance(__name, R):
+            raise AttributeError(f"Invalid Register {__name}")
+        sql = f"UPDATE register SET {__name.name} = ?"
+        self.conn.execute(sql, (__value % UINT16_MAX,))
         self.conn.commit()
 
-    def ALL(self):
-        sql = f"SELECT {','.join(self.reg_names)} FROM register"
-        cur = self.conn.execute(sql)
-        return list(cur.fetchone())
+    # def ALL(self):
+    #     """untested"""
+    #     sql = f"SELECT {','.join(R._member_names_)} FROM register"
+    #     cur = self.conn.execute(sql)
+    #     return list(cur.fetchone())
 
 
 class SqlVM:
-    def __init__(self, tracing=False):
+    def __init__(self, tracing: bool = False):
         self.conn = sqlite3.connect(':memory:')
         self.cursor = self.conn.cursor()
 
         self.create_hardware()
 
         self.memory: SqlMemory = SqlMemory(self.conn)
-        self.R: SqlRegisters = SqlRegisters(self.conn)
-
+        self.reg: SqlRegisters = SqlRegisters(self.conn)
 
     @property
-    def tracing(self):
-        sql = "SELECT value FROM signal WHERE name = 'tracing'"
+    def tracing(self) -> int:
+        sql = "SELECT tracing FROM signal"
         cur = self.conn.execute(sql)
         return cur.fetchone()[0]
 
     @tracing.setter
-    def tracing(self, value):
-        sql = "UPDATE signal SET value = ? WHERE name = 'tracing'"
+    def tracing(self, value: int):
+        sql = "UPDATE signal SET tracing = ?"
         self.conn.execute(sql, (value,))
         self.conn.commit()
 
     @property
-    def is_running(self):
-        sql = "SELECT value FROM signal WHERE name = 'running'"
+    def is_running(self) -> int:
+        sql = "SELECT is_running FROM signal"
         cur = self.conn.execute(sql)
         return cur.fetchone()[0]
+
+    @is_running.setter
+    def is_running(self, value: int):
+        sql = "UPDATE signal SET is_running = ?"
+        self.conn.execute(sql, (value,))
+        self.conn.commit()
 
     def run_and_print(self, sql):
         try:
@@ -182,17 +175,18 @@ class SqlVM:
 
     def reset(self):
         print('-- RESET --', file=sys.stderr)
-        self.R.R0 = 0
-        self.R.R1 = 0
-        self.R.R2 = 0
-        self.R.R3 = 0
-        self.R.R4 = 0
-        self.R.R5 = 0
-        self.R.R6 = 0
-        self.R.R7 = 0
-        self.R.PC = PC_START
-        self.R.COND = 1  # FL.POS
+        self.reg[R.R0] = 0
+        self.reg[R.R1] = 0
+        self.reg[R.R2] = 0
+        self.reg[R.R3] = 0
+        self.reg[R.R4] = 0
+        self.reg[R.R5] = 0
+        self.reg[R.R6] = 0
+        self.reg[R.R7] = 0
+        self.reg[R.PC] = PC_START
+        self.reg[R.COND] = 1  # FL.POS
         self.is_running = 1
+        self.tracing = 0
 
     def step(self):
         if not self.is_running:
