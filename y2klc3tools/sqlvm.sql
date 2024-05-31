@@ -34,16 +34,26 @@ CREATE TABLE memory(
 
 pragma recursive_triggers = 1;
 
--- detect rising and falling edges to trigger a step
-DROP TRIGGER IF EXISTS clk_trigger;
-CREATE TRIGGER clk_trigger
+-- CLK Rising edge detection
+DROP TRIGGER IF EXISTS clk_trigger_rising;
+CREATE TRIGGER clk_trigger_rising
 AFTER UPDATE OF clk ON signal
+    WHEN OLD.clk = 0 AND NEW.clk = 1
 BEGIN
-    INSERT INTO trace VALUES (
-        CASE
-            WHEN OLD.clk = 0 AND NEW.clk = 1 THEN 'rising edge'
-            WHEN OLD.clk = 1 AND NEW.clk = 0 THEN 'falling edge'
-            ELSE 'no edge detected'  -- Optional, for other cases
-        END
-    );
+    -- Insert into trace table based on clk edge detection
+    INSERT INTO trace VALUES ('clk rising edge');
+END;
+
+-- CLK Falling edge detection
+DROP TRIGGER IF EXISTS clk_trigger_falling;
+CREATE TRIGGER clk_trigger_falling
+AFTER UPDATE OF clk ON signal
+    WHEN OLD.clk = 1 AND NEW.clk = 0
+BEGIN
+    -- Insert into trace table based on clk edge detection
+    INSERT INTO trace VALUES ('clk falling edge');
+
+    -- Update PC in register table based on falling edge detection
+    UPDATE register
+        SET PC = PC + 1;
 END;
