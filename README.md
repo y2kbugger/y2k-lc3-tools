@@ -20,30 +20,32 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 
 # Todo
 1. sqlvm
-    - make is_running, and tracing signals in table, pass through as properties
-    - capture stdout and stderr in table
-    - print out stdout and stderr from table
-    - push all HALTED and RESET messages into SQL
+  - start using the notebook which references the python class to prototype the implementation triggers
+  - fix incorrect "8-bit" memory addressability
+  - capture stdout and stderr in table
+  - print out stdout and stderr from table
+  - push all HALTED and RESET messages into SQL
 1. Add test for vm
-    - reading from memory
-    - reading from registers
-    - smaller tests for runnng each instruction
+  - unify abstract VM (is_running, loading, etc)
+  - reading from memory
+  - reading from registers
+  - reg/memory/signal trace tests for each opcode
 1. Harmonize python linting/precommit/todos/formatting/etc with my other project
 1. Somehow ensure that all sql statements can be exported as script instead executing
 1. Get the assembler working in my repo and running under pytest
-    - tests for escape sequences in stringz, e.g: `CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"`
-1. Move register state into VM class
+  - tests for escape sequences in stringz, e.g: `CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"`
 1. Improve disasm
-    - pytests
-    - Get .FILL correct
-    - Be able to use symbol table to get labels
-    - stretch, match the CSU disassembler
+  - pytests
+  - Get .FILL correct
+  - Be able to use symbol table to get labels
+  - stretch, match the CSU disassembler
 1. combine info from all three readme's into one. including history of the projects, e.g. CSU extension with push/pop
 1. Document that the original assmember was written in C and had poor cli interface and gui was in tcl and also odd.
 1. Document that the original has an acutual operating system written in LC-3 assembly, but our vm stubs out the traps with python
 1. Get C compiler running in notebook
 1. Move C compiler tests to use pytest
 1. Make C compiler tests use the pure python assembler and vm
+1. Make test that compares traces between the pure-python and sqlvm for full all C program example
 1. Remove the dependencies that I installed for the c compiler (bats and moreutils)
 1. Convert compiler to use origial multi instruction push and pop, or implement push and pop for the vm
 1. Recreate a holistic CLI interface for the assembler, vm, and C compiler
