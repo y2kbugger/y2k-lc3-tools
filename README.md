@@ -20,7 +20,6 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 
 # Todo
 1. sqlvm
-  - start using the notebook which references the python class to prototype the implementation triggers
   - capture stdout and stderr in table
   - print out stdout and stderr from table
   - push all HALTED and RESET messages into SQL
