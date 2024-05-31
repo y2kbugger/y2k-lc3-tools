@@ -1,6 +1,6 @@
 import pytest
 
-from y2klc3tools import UINT16_MAX
+from y2klc3tools import UINT16_MAX, PC_START
 from y2klc3tools.vm import VM, R
 from y2klc3tools.sqlvm import SqlVM
 
@@ -84,15 +84,16 @@ def test_step_moves_pc_by_one(vm_nops: VM, capsys: pytest.CaptureFixture):
 
 
 def test_continue_runs_until_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
-    vm_nops.memory[0x3200] = 0xF025  # HLT
+    halt_location = PC_START + 0x200
+    vm_nops.memory[halt_location] = 0xF025  # HLT
     vm_nops.continue_()
     captured = capsys.readouterr()
     assert captured.err == "-- HALT --\n"
-    assert vm_nops.reg[R.PC] == 0x3200 + 1
+    assert vm_nops.reg[R.PC] == halt_location + 0x1
 
 
 def test_step_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
-    vm_nops.memory[0x3200] = 0xF025  # HLT
+    vm_nops.memory[PC_START + 0x200] = 0xF025  # HLT
     vm_nops.continue_()
     _ = capsys.readouterr()  # clear output
     vm_nops.step()
@@ -101,7 +102,7 @@ def test_step_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFix
 
 
 def test_continue_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
-    vm_nops.memory[0x3200] = 0xF025  # HLT
+    vm_nops.memory[PC_START + 0x200] = 0xF025  # HLT
     vm_nops.continue_()
     _ = capsys.readouterr()  # clear output
     vm_nops.continue_()
