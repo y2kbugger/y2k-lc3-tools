@@ -94,4 +94,5 @@ AFTER UPDATE OF instr ON signal
 BEGIN
     -- Insert into trace table based on instruction update
     INSERT INTO trace VALUES ('HLT instruction detected');
+    UPDATE signal SET is_running = 0;
 END;
