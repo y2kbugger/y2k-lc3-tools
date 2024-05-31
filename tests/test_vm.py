@@ -83,6 +83,10 @@ def test_step_moves_pc_by_one(vm_nops: VM, capsys: pytest.CaptureFixture):
     assert vm_nops.reg[R.PC] == pc_start + 1
 
 
+def test_is_running_after_reset(vm_nops: VM):
+    assert vm_nops.is_running
+
+
 def test_continue_runs_until_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
     halt_location = PC_START + 0x200
     vm_nops.memory[halt_location] = 0xF025  # HLT
@@ -90,6 +94,13 @@ def test_continue_runs_until_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
     captured = capsys.readouterr()
     assert captured.err == "-- HALT --\n"
     assert vm_nops.reg[R.PC] == halt_location + 0x1
+
+
+def test_isnt_running_after_halt(vm_nops: VM):
+    halt_location = PC_START + 0x200
+    vm_nops.memory[halt_location] = 0xF025  # HLT
+    vm_nops.continue_()
+    assert not vm_nops.is_running
 
 
 def test_step_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):

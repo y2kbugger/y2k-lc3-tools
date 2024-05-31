@@ -119,15 +119,16 @@ class SqlVM:
         self.conn.commit()
 
     @property
-    def is_running(self) -> int:
+    def is_running(self) -> bool:
         sql = "SELECT is_running FROM signal"
         cur = self.conn.execute(sql)
-        return cur.fetchone()[0]
+        return cur.fetchone()[0] == 1
 
     @is_running.setter
-    def is_running(self, value: int):
+    def is_running(self, value: bool):
         sql = "UPDATE signal SET is_running = ?"
-        self.conn.execute(sql, (value,))
+        intvalue = 1 if value else 0
+        self.conn.execute(sql, (intvalue,))
         self.conn.commit()
 
     def run_and_print(self, sql):

@@ -328,6 +328,10 @@ class VM:
         self.runstate: RunningState = RunningState()
         self.reg: Registers = Registers()
 
+    @property
+    def is_running(self) -> bool:
+        return self.runstate.is_running()
+
     def load_binary_from_file(self, file_path: str):
         """Read the contents of a binary file into memory."""
         with open(file_path, 'rb') as f:
