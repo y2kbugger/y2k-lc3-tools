@@ -144,7 +144,18 @@ class SqlVM:
         if self.cursor.description is None:
             return
 
-        print(tabulate(rows, headers=[d[0] for d in self.cursor.description]), end='\n\n')
+        # format ints as hex
+        frows = []
+        for r in rows:
+            fr = []
+            for v in r:
+                if isinstance(v, int):
+                    fr.append(f"0x{v:02x}")
+                else:
+                    fr.append(v)
+            frows.append(fr)
+
+        print(tabulate(frows, headers=[d[0] for d in self.cursor.description]), end='\n\n')
 
     def run_and_trace(self, sqlscript):
         self.run_and_print("DROP TABLE IF EXISTS trace")
@@ -190,18 +201,23 @@ class SqlVM:
         self.reg[R.R7] = 0
         self.reg[R.PC] = PC_START
         self.reg[R.COND] = 1  # FL.POS
-        self.is_running = 1
+        self.is_running = True
         self.tracing = 0
 
-    def step(self):
+    def step(self, trace=False):
         if not self.is_running:
             print('-- HALTED --', file=sys.stderr)
             return
 
+        if trace:
+            runner = self.run_and_trace
+        else:
+            runner = self.run_and_print
+
         sql = "UPDATE signal SET clk = 1"
-        self.run_and_print(sql)
+        runner(sql)
         sql = "UPDATE signal SET clk = 0"
-        self.run_and_print(sql)
+        runner(sql)
 
     def continue_(self):
         if not self.is_running:
