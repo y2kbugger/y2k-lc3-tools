@@ -180,7 +180,7 @@ def trap_out(reg: Registers):
 def trap_in(reg: Registers):
     sys.stdout.write("Enter a character: ")
     sys.stdout.flush()
-    reg[R.R0] = sys.stdout.read(1)
+    reg[R.R0] = sys.stdout.read(1).encode('ascii')[0]
 
 
 def trap_puts(mem: Memory, reg: Registers):
