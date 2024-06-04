@@ -30,6 +30,11 @@ def test_load_binary(vm: VM):
     assert vm.memory[0x3000] == 0xE005
 
 
+def test_poke_memory(vm: VM):
+    vm.memory[0x3000] = 0xBABE
+    assert vm.memory[0x3000] == 0xBABE
+
+
 def test_load_binary_bytes(vm: VM):
     image_bytes_hex = '3000 E005 2213'
     image_bytes = bytes.fromhex(image_bytes_hex)

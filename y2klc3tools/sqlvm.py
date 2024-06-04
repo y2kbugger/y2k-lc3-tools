@@ -64,7 +64,7 @@ class SqlMemory:
             INSERT INTO memory (address, value) VALUES (?, ?)
             ON CONFLICT(address) DO UPDATE SET value = excluded.value
             """
-        self.conn.execute(sql, (val, address))
+        self.conn.execute(sql, (address, val))
         self.conn.commit()
 
     def __len__(self):
