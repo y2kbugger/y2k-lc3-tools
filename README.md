@@ -20,11 +20,10 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 
 # Todo
 1. sqlvm
-  - capture stdout and stderr in table
-  - print out stdout and stderr from table
   - push all HALTED and RESET messages into SQL
 1. Add test for vm
   - unify abstract VM (is_running, loading, etc)
+  - and ability to run and print multiple lines without trace and use for `step`ping.
   - reading from memory
   - reading from registers
   - reg/memory/signal trace tests for each opcode

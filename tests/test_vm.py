@@ -78,13 +78,11 @@ def test_load_binary_fails_with_partial_word(vm: VM):
         vm.load_binary_from_hex(image_bytes)
 
 
-def test_step_moves_pc_by_one(vm_nops: VM, capsys: pytest.CaptureFixture):
+def test_step_moves_pc_by_one(vm_nops: VM):
     pc_start = vm_nops.reg[R.PC]
 
     vm_nops.step()
 
-    captured = capsys.readouterr()
-    assert captured.err == ""
     assert vm_nops.reg[R.PC] == pc_start + 1
 
 
@@ -92,12 +90,13 @@ def test_is_running_after_reset(vm_nops: VM):
     assert vm_nops.is_running
 
 
-def test_continue_runs_until_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
+def test_continue_runs_until_halted(vm_nops: VM):
     halt_location = PC_START + 0x200
     vm_nops.memory[halt_location] = 0xF025  # HLT
+
     vm_nops.continue_()
-    captured = capsys.readouterr()
-    assert captured.err == "-- HALT --\n"
+
+    assert not vm_nops.is_running
     assert vm_nops.reg[R.PC] == halt_location + 0x1
 
 
@@ -108,32 +107,30 @@ def test_isnt_running_after_halt(vm_nops: VM):
     assert not vm_nops.is_running
 
 
-def test_step_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
+def test_step_complains_if_already_halted(vm_nops: VM):
     vm_nops.memory[PC_START + 0x200] = 0xF025  # HLT
     vm_nops.continue_()
-    _ = capsys.readouterr()  # clear output
+    vm_nops.out.read_err()  # clear
     vm_nops.step()
-    captured = capsys.readouterr()
-    assert captured.err == "-- HALTED --\n"
+    assert vm_nops.out.read_err() == "-- HALTED --\n"
 
 
-def test_continue_complains_if_already_halted(vm_nops: VM, capsys: pytest.CaptureFixture):
+def test_continue_complains_if_already_halted(vm_nops: VM):
     vm_nops.memory[PC_START + 0x200] = 0xF025  # HLT
     vm_nops.continue_()
-    _ = capsys.readouterr()  # clear output
+    vm_nops.out.read_err()  # clear
     vm_nops.continue_()
-    captured = capsys.readouterr()
-    assert captured.err == "-- HALTED --\n"
+    assert vm_nops.out.read_err() == "-- HALTED --\n"
 
 
-def test_vm_can_run_looping_progam_with_output(vm: VM, capsys: pytest.CaptureFixture):
+def test_vm_can_run_looping_progam_with_output(vm: VM):
     vm.load_binary_from_file('obj/asm/hello2.obj')
+    vm.out.read_err()  # clear
     vm.continue_()
     # check that the program output the expected string
-    captured = capsys.readouterr()
-    # assert captured.out == "hell0ddd"
-    assert captured.out == "Hello, World!\n" * 5
-    assert captured.err == "-- HALT --\n"
+
+    assert vm.out.read() == "Hello, World!\n" * 5
+    assert vm.out.read_err() == "-- HALT --\n"
 
 
 def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):

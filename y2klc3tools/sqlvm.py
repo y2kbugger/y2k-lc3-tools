@@ -96,6 +96,39 @@ class SqlRegisters:
     #     return list(cur.fetchone())
 
 
+class SqlOutput:
+    def __init__(self, conn: sqlite3.Connection):
+        self.conn = conn
+
+    def _write(self, text: str, channel: str):
+        sql = "INSERT INTO msgout VALUES(?, ?)"
+        self.conn.execute(sql, (text, channel))
+        self.conn.commit()
+
+    def _read(self, channel: str):
+        sql = f"SELECT msg FROM msgout WHERE channel = '{channel}'"
+        cur = self.conn.execute(sql)
+        msg_lines = ''.join(msg + '\n' for (msg,) in cur.fetchall())
+
+        sql = f"DELETE FROM msgout WHERE channel = '{channel}'"
+        self.conn.execute(sql)
+        self.conn.commit()
+
+        return msg_lines
+
+    def write(self, text: str):
+        self._write(text, 'output')
+
+    def write_err(self, text: str):
+        self._write(text, 'error')
+
+    def read(self) -> str:
+        return self._read('output')
+
+    def read_err(self):
+        return self._read('error')
+
+
 class SqlVM:
     def __init__(self, tracing: bool = False):
         self.conn = sqlite3.connect(':memory:')
@@ -105,6 +138,7 @@ class SqlVM:
 
         self.memory: SqlMemory = SqlMemory(self.conn)
         self.reg: SqlRegisters = SqlRegisters(self.conn)
+        self.out: SqlOutput = SqlOutput(self.conn)
 
     @property
     def tracing(self) -> int:
@@ -135,7 +169,7 @@ class SqlVM:
         try:
             self.cursor.execute(sql)
         except sqlite3.OperationalError as e:
-            print("Error:\n", sql)
+            print("Error:\n", sql, file=sys.stderr)
             raise e
 
         self.conn.commit()
@@ -157,18 +191,20 @@ class SqlVM:
 
         print(tabulate(frows, headers=[d[0] for d in self.cursor.description]), end='\n\n')
 
-    def run_and_trace(self, sqlscript):
-        self.run_and_print("DROP TABLE IF EXISTS trace")
-        self.run_and_print("CREATE TABLE trace(trace TEXT)")
+    def run(self, sqlscript):
         for sql in sqlparse.split(sqlscript):
             self.run_and_print(sql)
-        self.run_and_print("SELECT * FROM trace")
+
+    def run_and_trace(self, sqlscript):
+        self.run_and_print("DELETE FROM msgout WHERE channel = 'trace'")
+        self.run(sqlscript)
+        self.run_and_print("SELECT * FROM msgout WHERE channel = 'trace'")
 
     def create_hardware(self):
         THIS_DIR = Path(__file__).parent
         with open(THIS_DIR / 'sqlvm.sql') as f:
             sqlscript = f.read()
-        self.run_and_trace(sqlscript)
+        self.run(sqlscript)
 
     def load_binary_from_file(self, file_path: str):
         """Read the contents of a binary file into memory."""
@@ -190,7 +226,7 @@ class SqlVM:
         self.memory.load_binary(image_binary_bytes)
 
     def reset(self):
-        print('-- RESET --', file=sys.stderr)
+        self.out.write_err('-- RESET --')
         self.reg[R.R0] = 0
         self.reg[R.R1] = 0
         self.reg[R.R2] = 0
@@ -206,22 +242,23 @@ class SqlVM:
 
     def step(self, trace=False):
         if not self.is_running:
-            print('-- HALTED --', file=sys.stderr)
+            self.out.write_err('-- HALTED --')
             return
 
         if trace:
             runner = self.run_and_trace
         else:
-            runner = self.run_and_print
+            runner = self.run
 
-        sql = "UPDATE signal SET clk = 1"
-        runner(sql)
-        sql = "UPDATE signal SET clk = 0"
-        runner(sql)
+        sqlscript = """
+            UPDATE signal SET clk = 1;
+            UPDATE signal SET clk = 0;
+            """
+        runner(sqlscript)
 
     def continue_(self):
         if not self.is_running:
-            print('-- HALTED --', file=sys.stderr)
+            self.out.write_err('-- HALTED --')
             return
         while self.is_running:
             self.step()

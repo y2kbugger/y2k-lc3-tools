@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import array
-from enum import Enum
 import select
 import sys
 import termios
@@ -158,38 +157,27 @@ def str_(instr, mem: Memory, reg: Registers):
 
 
 ### TRAPs implementation
-def trap_putc(mem: Memory, reg: Registers):
-    i = reg[R.R0]
-    c = mem[i]
-    while c != 0:
-        sys.stdout.write(chr(c))
-        i += 1
-        c = mem[i]
-    sys.stdout.flush()
-
-
 def trap_getc(reg: Registers):
     reg[R.R0] = ord(getchar())
 
 
-def trap_out(reg: Registers):
-    sys.stdout.write(chr(reg[R.R0]))
-    sys.stdout.flush()
+def trap_out(reg: Registers, out: Output):
+    out.write(chr(reg[R.R0] & 0xFF))
 
 
-def trap_in(reg: Registers):
-    sys.stdout.write("Enter a character: ")
-    sys.stdout.flush()
-    reg[R.R0] = sys.stdout.read(1).encode('ascii')[0]
-
-
-def trap_puts(mem: Memory, reg: Registers):
+def trap_puts(mem: Memory, reg: Registers, out: Output):
     for i in range(reg[R.R0], len(mem)):
         c = mem[i]
         if c == 0:
             break
-        sys.stdout.write(chr(c))
-    sys.stdout.flush()
+        out.write(chr(c))
+
+
+def trap_in(reg: Registers, out: Output):
+    out.write("Enter a character: ")
+    c = getchar()
+    out.write(c)
+    reg[R.R0] = ord(c)
 
 
 def trap_putsp(mem: Memory, reg: Registers):
@@ -204,26 +192,26 @@ def trap_putsp(mem: Memory, reg: Registers):
     sys.stdout.flush()
 
 
-def trap_halt(runstate: RunningState):
-    print('-- HALT --', file=sys.stderr)
+def trap_halt(runstate: RunningState, out: Output):
+    out.write_err('-- HALT --\n')
     runstate.halt()
 
 
-def trap(instr, mem: Memory, runstate: RunningState, reg: Registers):
+def trap(instr, mem: Memory, runstate: RunningState, reg: Registers, out: Output):
     t = Trap(instr & 0xFF)
 
     if t == Trap.GETC:
         trap_getc(reg)
     elif t == Trap.OUT:
-        trap_out(reg)
+        trap_out(reg, out)
     elif t == Trap.PUTS:
-        trap_puts(mem, reg)
+        trap_puts(mem, reg, out)
     elif t == Trap.IN:
-        trap_in(reg)
+        trap_in(reg, out)
     elif t == Trap.PUTSP:
         trap_putsp(mem, reg)
     elif t == Trap.HALT:
-        trap_halt(runstate)
+        trap_halt(runstate, out)
 
 
 def check_key():
@@ -320,6 +308,28 @@ class RunningState:
         self._is_running = True
 
 
+class Output:
+    def __init__(self):
+        self._out = ''
+        self._err = ''
+
+    def write(self, text: str):
+        self._out += text
+
+    def write_err(self, text: str):
+        self._err += text
+
+    def read(self):
+        o = self._out
+        self._out = ''
+        return o
+
+    def read_err(self):
+        e = self._err
+        self._err = ''
+        return e
+
+
 class VM:
     def __init__(self, tracing=False):
         self.tracing = tracing
@@ -327,6 +337,7 @@ class VM:
         self.memory: Memory = Memory()
         self.runstate: RunningState = RunningState()
         self.reg: Registers = Registers()
+        self.out: Output = Output()
 
     @property
     def is_running(self) -> bool:
@@ -352,7 +363,7 @@ class VM:
         self.memory.load_binary(image_binary_bytes)
 
     def reset(self):
-        print('-- RESET --', file=sys.stderr)
+        self.out.write_err('-- RESET --\n')
         self.reg = Registers()
         self.reg[R.PC] = PC_START
         self.reg[R.COND] = FL.POS.value
@@ -360,7 +371,7 @@ class VM:
 
     def step(self):
         if not self.runstate.is_running():
-            print('-- HALTED --', file=sys.stderr)
+            self.out.write_err('-- HALTED --\n')
             return
 
         if self.tracing:
@@ -399,13 +410,13 @@ class VM:
         elif op == OP.STR:
             str_(instr, self.memory, self.reg)
         elif op == OP.TRAP:
-            trap(instr, self.memory, self.runstate, self.reg)
+            trap(instr, self.memory, self.runstate, self.reg, self.out)
         else:
             bad_opcode(instr)
 
     def continue_(self):
         if not self.runstate.is_running():
-            print('-- HALTED --', file=sys.stderr)
+            self.out.write_err('-- HALTED --\n')
             return
         while self.runstate.is_running():
             self.step()

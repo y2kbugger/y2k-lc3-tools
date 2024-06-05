@@ -1,4 +1,5 @@
-INSERT INTO trace VALUES ('Reticulating splines...');
+CREATE TABLE msgout (msg TEXT, channel TEXT);
+INSERT INTO msgout VALUES ( 'Reticulating splines...', 'trace');
 
 CREATE TABLE signal(
     clk BOOLEAN,
@@ -44,8 +45,7 @@ CREATE TRIGGER clk_trigger_rising
 AFTER UPDATE OF clk ON signal
     WHEN OLD.clk = 0 AND NEW.clk = 1
 BEGIN
-    -- Insert into trace table based on clk edge detection
-    INSERT INTO trace VALUES ('clk rising edge');
+    INSERT INTO msgout VALUES ('clk rising edge', 'trace');
 END;
 
 -- ################################
@@ -56,19 +56,18 @@ CREATE TRIGGER clk_trigger_falling
 AFTER UPDATE OF clk ON signal
     WHEN OLD.clk = 1 AND NEW.clk = 0
 BEGIN
-    -- Insert into trace table based on clk edge detection
-    INSERT INTO trace VALUES ('clk falling edge');
+    INSERT INTO msgout VALUES ('clk falling edge', 'trace');
 
     -- Read instruction from memory based on PC
     -- There are two bytes the High and Low. We are Big Endian.
-    INSERT INTO trace VALUES ('reading instruction from memory...');
+    INSERT INTO msgout VALUES ('reading instruction from memory...', 'trace');
     UPDATE signal
         SET instr = (
             (SELECT value FROM memory WHERE address = (SELECT PC FROM register))
         );
 
     -- Update PC in register table based on falling edge detection
-    INSERT INTO trace VALUES ('incrementing PC...');
+    INSERT INTO msgout VALUES ('incrementing PC...', 'trace');
     UPDATE register
         SET PC = PC + 1;
 END;
@@ -82,8 +81,7 @@ DROP TRIGGER IF EXISTS instr_trigger;
 CREATE TRIGGER instr_trigger
 AFTER UPDATE OF instr ON signal
 BEGIN
-    -- Insert into trace table based on instruction update
-    INSERT INTO trace VALUES ('instruction updated');
+    INSERT INTO msgout VALUES ('instruction updated', 'trace');
 END;
 
 -- ## HLT ##
@@ -92,7 +90,6 @@ CREATE TRIGGER instr_hlt_trigger
 AFTER UPDATE OF instr ON signal
     WHEN NEW.instr = 0xF025
 BEGIN
-    -- Insert into trace table based on instruction update
-    INSERT INTO trace VALUES ('HLT instruction detected');
+    INSERT INTO msgout VALUES ('HLT instruction detected', 'trace');
     UPDATE signal SET is_running = 0;
 END;
