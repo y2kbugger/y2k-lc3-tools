@@ -4,11 +4,9 @@ INSERT INTO msgout VALUES ( 'Reticulating splines...', 'trace');
 CREATE TABLE signal(
     clk BOOLEAN,
     is_running BOOLEAN,
-    tracing BOOLEAN,
     instr INT
     );
 INSERT INTO signal VALUES (
-    FALSE,
     FALSE,
     FALSE,
     0

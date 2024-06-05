@@ -1,4 +1,5 @@
 import array
+from collections.abc import Iterable
 from pathlib import Path
 import sqlite3
 import sys
@@ -89,11 +90,10 @@ class SqlRegisters:
         self.conn.execute(sql, (__value % UINT16_MAX,))
         self.conn.commit()
 
-    # def ALL(self):
-    #     """untested"""
-    #     sql = f"SELECT {','.join(R._member_names_)} FROM register"
-    #     cur = self.conn.execute(sql)
-    #     return list(cur.fetchone())
+    def values(self) -> Iterable[int]:
+        sql = f"SELECT {','.join(R._member_names_)} FROM register"
+        cur = self.conn.execute(sql)
+        yield from cur.fetchone()
 
 
 class SqlOutput:
@@ -130,7 +130,10 @@ class SqlOutput:
 
 
 class SqlVM:
-    def __init__(self, tracing: bool = False):
+    def __init__(self, trace_registers: bool = False):
+        self.trace_registers = trace_registers
+        self.reg_trace = []
+
         self.conn = sqlite3.connect(':memory:')
         self.cursor = self.conn.cursor()
 
@@ -139,18 +142,6 @@ class SqlVM:
         self.memory: SqlMemory = SqlMemory(self.conn)
         self.reg: SqlRegisters = SqlRegisters(self.conn)
         self.out: SqlOutput = SqlOutput(self.conn)
-
-    @property
-    def tracing(self) -> int:
-        sql = "SELECT tracing FROM signal"
-        cur = self.conn.execute(sql)
-        return cur.fetchone()[0]
-
-    @tracing.setter
-    def tracing(self, value: int):
-        sql = "UPDATE signal SET tracing = ?"
-        self.conn.execute(sql, (value,))
-        self.conn.commit()
 
     @property
     def is_running(self) -> bool:
@@ -244,6 +235,9 @@ class SqlVM:
         if not self.is_running:
             self.out.write_err('-- HALTED --')
             return
+
+        if self.trace_registers:
+            self.reg_trace.append(list(self.reg.values()))
 
         if trace:
             runner = self.run_and_trace

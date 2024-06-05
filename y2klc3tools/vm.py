@@ -331,8 +331,8 @@ class Output:
 
 
 class VM:
-    def __init__(self, tracing=False):
-        self.tracing = tracing
+    def __init__(self, trace_registers=False):
+        self.trace_registers = trace_registers
         self.reg_trace = []
         self.memory: Memory = Memory()
         self.runstate: RunningState = RunningState()
@@ -374,7 +374,7 @@ class VM:
             self.out.write_err('-- HALTED --\n')
             return
 
-        if self.tracing:
+        if self.trace_registers:
             self.reg_trace.append(list(self.reg.values()))
 
         instr = self.memory[self.reg[R.PC]]

@@ -135,7 +135,7 @@ def test_vm_can_run_looping_progam_with_output(vm: VM):
 
 def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
     vm.load_binary_from_file('obj/asm/hello2.obj')
-    vm.tracing = True
+    vm.trace_registers = True
     vm.continue_()
     assert vm.reg_trace == [
         [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
@@ -161,7 +161,7 @@ def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
 
 def test_tracing_vm_can_run_looping_progam_with_register_traces2(vm: VM):
     vm.load_binary_from_file('obj/asm/hard.obj')
-    vm.tracing = True
+    vm.trace_registers = True
     vm.continue_()
     assert vm.reg_trace == [
         [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
@@ -177,7 +177,7 @@ def test_tracing_vm_can_run_looping_progam_with_register_traces2(vm: VM):
 
 def test_tracing_vm_can_run_looping_progam_with_register_traces3(vm: VM):
     vm.load_binary_from_file('obj/asm/legal.obj')
-    vm.tracing = True
+    vm.trace_registers = True
     vm.continue_()
     assert vm.reg_trace == [
         [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
@@ -193,7 +193,7 @@ def test_tracing_vm_can_run_looping_progam_with_register_traces3(vm: VM):
 
 def test_tracing_vm_can_run_looping_progam_with_register_traces4(vm: VM):
     vm.load_binary_from_file('obj/asm/instructions.obj')
-    vm.tracing = True
+    vm.trace_registers = True
     vm.continue_()
     assert vm.reg_trace == [
         [0, 0, 0, 0, 0, 0, 0, 0, 12288, 1],
