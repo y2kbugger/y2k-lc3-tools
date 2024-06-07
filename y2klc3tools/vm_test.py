@@ -14,13 +14,8 @@ def vm(request: pytest.FixtureRequest) -> PyVM:
     return vm
 
 
-@pytest.fixture()
-def vm_nops(vm: VM) -> VM:
-    """Load a program that does nothing but run add instructions repeatedly"""
-    origin = '0000'
-    image_bytes = origin + '16BF' * (UINT16_MAX)
-    vm.mem.load_binary_from_hex(image_bytes)
-    return vm
+NOP = '16BF'
+HLT = 'F025'
 
 
 def test_load_binary(vm: VM):
@@ -79,50 +74,61 @@ def test_load_binary_fails_with_partial_word(vm: VM):
         vm.mem.load_binary_from_hex(image_bytes)
 
 
-def test_step_moves_pc_by_one(vm_nops: VM):
-    pc_start = vm_nops.reg[R.PC]
+def test_is_running_after_reset(vm: VM):
+    assert vm.runstate.is_running
+
+
+def test_step_moves_pc_by_one(vm: VM):
+    origin = '3000'
+    image_bytes = origin + NOP
+    vm.mem.load_binary_from_hex(image_bytes)
+    pc_start = vm.reg[R.PC]
     print(f'PC start: {pc_start}')
 
-    vm_nops.step()
+    vm.step()
 
-    assert vm_nops.reg[R.PC] == pc_start + 1
-
-
-def test_is_running_after_reset(vm_nops: VM):
-    assert vm_nops.runstate.is_running
+    assert vm.reg[R.PC] == pc_start + 1
 
 
-def test_continue_runs_until_halted(vm_nops: VM):
-    halt_location = PC_START + 0x200
-    vm_nops.mem[halt_location] = 0xF025  # HLT
+def test_continue_runs_until_halted(vm: VM):
+    origin = '3000'
+    image_bytes = origin + NOP * 10 + 'F025'
+    vm.mem.load_binary_from_hex(image_bytes)
 
-    vm_nops.continue_()
+    vm.continue_()
 
-    assert not vm_nops.runstate.is_running
-    assert vm_nops.reg[R.PC] == halt_location + 0x1
-
-
-def test_isnt_running_after_halt(vm_nops: VM):
-    halt_location = PC_START + 0x200
-    vm_nops.mem[halt_location] = 0xF025  # HLT
-    vm_nops.continue_()
-    assert not vm_nops.runstate.is_running
+    assert not vm.runstate.is_running
+    assert vm.reg[R.PC] == PC_START + 10 + 1
 
 
-def test_step_complains_if_already_halted(vm_nops: VM):
-    vm_nops.mem[PC_START + 0x200] = 0xF025  # HLT
-    vm_nops.continue_()
-    vm_nops.out.read_err()  # clear
-    vm_nops.step()
-    assert vm_nops.out.read_err() == "-- HALTED --\n"
+def test_isnt_running_after_halt(vm: VM):
+    origin = '3000'
+    image_bytes = origin + NOP * 10 + 'F025'
+    vm.mem.load_binary_from_hex(image_bytes)
+    vm.continue_()
+    assert not vm.runstate.is_running
 
 
-def test_continue_complains_if_already_halted(vm_nops: VM):
-    vm_nops.mem[PC_START + 0x200] = 0xF025  # HLT
-    vm_nops.continue_()
-    vm_nops.out.read_err()  # clear
-    vm_nops.continue_()
-    assert vm_nops.out.read_err() == "-- HALTED --\n"
+def test_step_complains_if_already_halted(vm: VM):
+    origin = '3000'
+    image_bytes = origin + NOP * 10 + 'F025'
+    vm.mem.load_binary_from_hex(image_bytes)
+    vm.continue_()
+    vm.out.read_err()  # clear
+
+    vm.step()
+
+    assert vm.out.read_err() == "-- HALTED --\n"
+
+
+def test_continue_complains_if_already_halted(vm: VM):
+    origin = '3000'
+    image_bytes = origin + NOP * 10 + 'F025'
+    vm.mem.load_binary_from_hex(image_bytes)
+    vm.continue_()
+    vm.out.read_err()  # clear
+    vm.continue_()
+    assert vm.out.read_err() == "-- HALTED --\n"
 
 
 def test_vm_can_run_looping_progam_with_output(vm: VM):
