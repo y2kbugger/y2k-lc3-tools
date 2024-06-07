@@ -46,15 +46,17 @@ The notebooks are in the `notebooks` directory.
 Use the venv created by poetry to run the notebooks, one easy way is from within vscode.
 
 # Todo
+1. Harmonize python linting/precommit/todos/formatting/etc with my other project
+  - Fix all the linting errors
+  - pull over vscode settings
+1. Add debug view for memory and registers
 1. sqlvm
   - push all HALTED and RESET messages into SQL
 1. Add test for vm
   - reading from memory
   - reading from registers
   - reg/memory/signal trace tests for each opcode
-1. Harmonize python linting/precommit/todos/formatting/etc with my other project
 1. Add ability to convert and display binary images as text
-1. Add debug view for memory and registers
 1. Somehow ensure that all sql statements can be exported as script instead executing
 1. Get the assembler working in my repo and running under pytest
   - tests for escape sequences in stringz, e.g: `CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"`
