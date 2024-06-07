@@ -22,8 +22,6 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. sqlvm
   - push all HALTED and RESET messages into SQL
 1. Add test for vm
-  - unify abstract VM (is_running, loading, etc)
-  - and ability to run and print multiple lines without trace and use for `step`ping.
   - reading from memory
   - reading from registers
   - reg/memory/signal trace tests for each opcode
@@ -46,6 +44,7 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. Make C compiler tests use the pure python assembler and vm
 1. Make test that compares traces between the pure-python and sqlvm for full all C program example
 1. Remove the dependencies that I installed for the c compiler (bats and moreutils)
+1. implement memory mapped IO, keyboard, display, timer (see docs)
 1. Convert compiler to use origial multi instruction push and pop, or implement push and pop for the vm
 1. Recreate a holistic CLI interface for the assembler, vm, and C compiler
 
