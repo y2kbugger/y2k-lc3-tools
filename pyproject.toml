@@ -10,10 +10,7 @@ authors = ["y2k <git@y2kbugger.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-pycparser = "^2.21"
-ipywidgets = "^8.1.3"
-
+python = "^3.12"
 
 [tool.poetry.group.dev.dependencies]
 tabulate = "^0.9.0"
@@ -24,6 +21,7 @@ ruff = "*"
 pycparser = "*"
 ipywidgets = "*"
 pre-commit = "*"
+
 
 [tool.pytest.ini_options]
 minversion = "8.0"
