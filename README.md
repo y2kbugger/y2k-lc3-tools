@@ -3,10 +3,25 @@
 
     poetry install
 
+## Install pre-commit hooks:
+
+    $ poetry run pre-commit install --hook-type pre-commit --hook-type pre-push
+
+then activate and run the tests via vscode or the cli:
+
+    $ poetry shell
+    $ pytest
+
+# Updating
+## Precommit
+If you need to update the precommit hooks, run the following:
+
+    pre-commit autoupdate
+
 # Development
 ## Running Tests
 
-    poetry run pytest
+    pytest
 
 ## Diffing binary files
 Enable custom textconv for git
