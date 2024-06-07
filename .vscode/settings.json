@@ -1,6 +1,6 @@
 {
   "python.testing.pytestArgs": [
-    "tests"
+    "y2klc3tools"
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,

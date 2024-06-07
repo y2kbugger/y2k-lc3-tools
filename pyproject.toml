@@ -22,13 +22,12 @@ pycparser = "*"
 ipywidgets = "*"
 pre-commit = "*"
 
-
 [tool.pytest.ini_options]
 minversion = "8.0"
 python_files = "*_test.py"
 addopts = [
     ]
-testpaths = ["tests"]
+testpaths = ["y2klc3tools"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
