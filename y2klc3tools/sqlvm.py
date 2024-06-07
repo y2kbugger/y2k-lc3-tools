@@ -1,3 +1,4 @@
+import array
 from collections.abc import Iterable
 from pathlib import Path
 import sqlite3
@@ -15,6 +16,16 @@ from tabulate import tabulate
 class SqlMemory(Memory):
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
+
+    def load_words_at_address(self, words: array.array[int], address: int):
+        assert len(words) + address <= UINT16_MAX
+        assert address >= 0
+        assert words.itemsize == 2  # 2 bytes per word
+
+        # use executemany for an approximate 3x speedup over naive loop
+        sql = """INSERT INTO memory (address, value) VALUES (?, ?)
+            ON CONFLICT(address) DO UPDATE SET value = excluded.value"""
+        self.conn.executemany(sql, ((a, w) for a, w in enumerate(words, address)))
 
     def __getitem__(self, address: int) -> int:
         address = address % UINT16_MAX
