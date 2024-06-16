@@ -46,8 +46,6 @@ The notebooks are in the `notebooks` directory.
 Use the venv created by poetry to run the notebooks, one easy way is from within vscode.
 
 # Todo
-1. Harmonize python linting/precommit/todos/formatting/etc with my other project
-  - Fix all the linting errors
 1. Add debug view for memory and registers
 1. sqlvm
   - push all HALTED and RESET messages into SQL
@@ -58,7 +56,6 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. add integration test flag and run only on push
   - full program traces
   - ipynb smoke tests
-1. ensure ipynbs are included in pyright precommit hooks
 1. Add ability to convert and display binary images as text
 1. Somehow ensure that all sql statements can be exported as script instead executing
 1. Get the assembler working in my repo and running under pytest
