@@ -2,13 +2,14 @@ import array
 import dataclasses
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from pathlib import Path
 
 from . import PC_START, UINT16_MAX
-from .vm_def import FL, R
+from .vm_def import FL, UINT16, R
 
 
 class Memory(ABC):
-    def load_words_at_address(self, words: array.array[int], address: int) -> None:
+    def load_words_at_address(self, words: array.array[UINT16], address: UINT16) -> None:
         assert len(words) + address <= UINT16_MAX
         assert address >= 0
         assert words.itemsize == 2  # 2 bytes per word
@@ -19,9 +20,13 @@ class Memory(ABC):
     def load_binary(self, image_binary: bytes) -> None:
         """Load a flat LC3 binary file into memory.
 
-        This function interprets the given binary data as an image file with a specific format and loads it into the global 'memory'. The binary format is expected as follows:
+        This function interprets the given binary data as an image file with a
+        specific format and loads it into the global 'memory'. The binary format
+        is expected as follows:
 
-        - Origin (2 bytes): The first two bytes specify the 'origin', i.e., the starting address in memory where the image data will be loaded. It's interpreted as a big-endian unsigned integer.
+        - Origin (2 bytes): The first two bytes specify the 'origin', i.e., the
+        starting address in memory where the image data will be loaded. It's
+        interpreted as a big-endian unsigned integer.
         - Image Data (variable length): The rest of the binary data represents the image content.
 
         Parameters:
@@ -45,7 +50,7 @@ class Memory(ABC):
 
     def load_binary_from_file(self, file_path: str) -> None:
         """Read the contents of a binary file into memory."""
-        with open(file_path, 'rb') as f:
+        with Path(file_path).open('rb') as f:
             bytes_read = f.read()
         self.load_binary(bytes_read)
 
@@ -62,14 +67,14 @@ class Memory(ABC):
         """Load bytes directly into memory."""
         self.load_binary(image_binary_bytes)
 
-    def __len__(self) -> int:
+    def __len__(self) -> UINT16:
         return UINT16_MAX
 
     @abstractmethod
-    def __getitem__(self, address: int) -> int: ...
+    def __getitem__(self, address: UINT16) -> UINT16: ...
 
     @abstractmethod
-    def __setitem__(self, address: int, val: int): ...
+    def __setitem__(self, address: UINT16, val: UINT16): ...
 
 
 class Registers(ABC):
@@ -78,7 +83,7 @@ class Registers(ABC):
         self.trace_enabled = False
         self.traces = []
 
-    def values(self) -> Iterable[int]:
+    def values(self) -> Iterable[UINT16]:
         yield from [self[r] for r in R]
 
     def save_trace(self) -> None:
@@ -91,10 +96,10 @@ class Registers(ABC):
         self[R.COND] = FL.POS.value
 
     @abstractmethod
-    def __getitem__(self, key: R) -> int: ...
+    def __getitem__(self, key: R) -> UINT16: ...
 
     @abstractmethod
-    def __setitem__(self, key: R, val: int): ...
+    def __setitem__(self, key: R, val: UINT16): ...
 
 
 class RunningState(ABC):
@@ -132,7 +137,7 @@ class Output(ABC):
     def read(self) -> str:
         return self._read('output')
 
-    def read_err(self):
+    def read_err(self) -> str:
         return self._read('error')
 
 

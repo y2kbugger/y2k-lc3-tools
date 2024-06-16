@@ -8,14 +8,14 @@ from tabulate import tabulate
 
 from . import UINT16_MAX
 from .vm_abc import VM, Memory, Output, Registers, RunningState
-from .vm_def import R
+from .vm_def import UINT16, R
 
 
 class SqlMemory(Memory):
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
 
-    def load_words_at_address(self, words: array.array[int], address: int) -> None:
+    def load_words_at_address(self, words: array.array[UINT16], address: UINT16) -> None:
         assert len(words) + address <= UINT16_MAX
         assert address >= 0
         assert words.itemsize == 2  # 2 bytes per word
@@ -25,7 +25,7 @@ class SqlMemory(Memory):
             ON CONFLICT(address) DO UPDATE SET value = excluded.value"""
         self.conn.executemany(sql, ((a, w) for a, w in enumerate(words, address)))
 
-    def __getitem__(self, address: int) -> int:
+    def __getitem__(self, address: UINT16) -> UINT16:
         address = address % UINT16_MAX
         sql = "SELECT value FROM memory WHERE address = ?"
         cur = self.conn.execute(sql, (address,))
@@ -34,7 +34,7 @@ class SqlMemory(Memory):
         except TypeError:
             return 0
 
-    def __setitem__(self, address: int, val: int):
+    def __setitem__(self, address: UINT16, val: UINT16):
         address = address % UINT16_MAX
         # insert on conflict update
         sql = """
@@ -50,14 +50,14 @@ class SqlRegisters(Registers):
         self.conn = conn
         super().__init__()
 
-    def __getitem__(self, key: R) -> int:
+    def __getitem__(self, key: R) -> UINT16:
         if not isinstance(key, R):
             raise AttributeError(f"Invalid Register {key}")
         sql = f"SELECT {key.name} FROM register"
         cur = self.conn.execute(sql)
         return cur.fetchone()[0]
 
-    def __setitem__(self, key: R, val: int) -> None:
+    def __setitem__(self, key: R, val: UINT16) -> None:
         if not isinstance(key, R):
             raise AttributeError(f"Invalid Register {key}")
         sql = f"UPDATE register SET {key.name} = ?"
@@ -71,7 +71,7 @@ class SqlRunningState(RunningState):
         super().__init__()
 
     @property
-    def is_running(self):
+    def is_running(self) -> bool:
         sql = "SELECT is_running FROM signal"
         cur = self.conn.execute(sql)
         return cur.fetchone()[0] == 1
@@ -116,7 +116,7 @@ class SqlVM(VM):
         self.reg = SqlRegisters(self.conn)
         self.out = SqlOutput(self.conn)
 
-    def run_and_print(self, sql) -> None:
+    def run_and_print(self, sql: str) -> None:
         try:
             self.cursor.execute(sql)
         except sqlite3.OperationalError as e:
@@ -142,18 +142,18 @@ class SqlVM(VM):
 
         print(tabulate(frows, headers=[d[0] for d in self.cursor.description]), end='\n\n')
 
-    def run(self, sqlscript) -> None:
+    def run(self, sqlscript: str) -> None:
         for sql in sqlparse.split(sqlscript):
             self.run_and_print(sql)
 
-    def run_and_trace(self, sqlscript) -> None:
+    def run_and_trace(self, sqlscript: str) -> None:
         self.run_and_print("DELETE FROM msgout WHERE channel = 'trace'")
         self.run(sqlscript)
         self.run_and_print("SELECT * FROM msgout WHERE channel = 'trace'")
 
     def create_hardware(self) -> None:
         THIS_DIR = Path(__file__).parent
-        with open(THIS_DIR / 'sqlvm.sql') as f:
+        with (THIS_DIR / 'sqlvm.sql').open('r') as f:
             sqlscript = f.read()
         self.run(sqlscript)
 

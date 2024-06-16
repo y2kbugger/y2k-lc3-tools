@@ -1,5 +1,7 @@
 from enum import Enum
 
+type UINT16 = int  # TODO: maybe make this a separate type wrapped in function that guarantees 16-bit int
+
 
 class R(Enum):
     R0 = 0

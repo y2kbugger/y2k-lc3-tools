@@ -29,7 +29,7 @@ repos:
   rev: 'v1.1.366'
   hooks:
     - id: pyright
-    # types_or: [python, jupyter] # TODO: currently broken for jupyter but maybe fixed in the future
+      # types_or: [python, jupyter] # TODO: currently broken for jupyter but maybe fixed in the future
 - repo: local
   hooks:
     - id: pytest-check
