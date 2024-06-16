@@ -1,24 +1,30 @@
 {
+  // scm
+  "git.showCommitInput": false,
+  // testing
+  "testing.openTesting": "openOnTestFailure",
   "python.testing.pytestArgs": [
     "y2klc3tools"
   ],
+  // editor
+  "files.insertFinalNewline": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll": "always"
+  },
+  "notebook.formatOnSave.enabled": true,
+  "github.copilot.editor.enableCodeActions": false,
+  // python
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "testing.openTesting": "openOnTestFailure",
-  "notebook.formatOnSave.enabled": true,
   "[python]": {
-    "editor.formatOnSave": true,
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.defaultFoldingRangeProvider": "charliermarsh.ruff"
   },
-  "ruff.format.args": [
-    "--preview"
-  ],
-  "ruff.lint.args": [
-    "--preview"
-  ],
   "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
   "python.analysis.typeCheckingMode": "standard", // TODO: change this to strict eventually, also set in pyproject.toml for precommit
   "python.analysis.diagnosticMode": "openFilesOnly", // TODO: change this to workspace eventually
-  "github.copilot.editor.enableCodeActions": false
 }

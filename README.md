@@ -48,7 +48,6 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 # Todo
 1. Harmonize python linting/precommit/todos/formatting/etc with my other project
   - Fix all the linting errors
-  - pull over vscode settings
 1. Add debug view for memory and registers
 1. sqlvm
   - push all HALTED and RESET messages into SQL

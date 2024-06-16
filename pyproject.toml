@@ -30,6 +30,8 @@ addopts = [
 testpaths = ["y2klc3tools"]
 
 [tool.ruff]
+preview = true
+
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
 ]
