@@ -18,6 +18,13 @@ If you need to update the precommit hooks, run the following:
 
     pre-commit autoupdate
 
+## Poetry deps
+Ensure you have poetry-plugin-up installed, use system package manager or something.
+
+Then run the following to update all dependencies
+
+    poetry up --with dev --latest --no-install --preserve-wildcard
+
 # Development
 ## Running Tests
 
@@ -27,6 +34,11 @@ If you need to update the precommit hooks, run the following:
 Enable custom textconv for git
 
     git config --local include.path ../.gitconfig
+
+## Manually running linters
+pre-commit hooks
+
+    pre-commit run --all-files
 
 ## Notebooks
 The notebooks are in the `notebooks` directory.
