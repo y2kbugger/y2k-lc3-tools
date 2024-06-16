@@ -34,7 +34,7 @@ def parse_op(op):
     return ops.get(op >> 12)
 
 
-def disassemble(image_binary: bytes):
+def disassemble(image_binary: bytes) -> None:
     origin = int.from_bytes(image_binary[:2], byteorder='big')
     dump = array.array("H", [origin])
 
@@ -50,7 +50,7 @@ def disassemble(image_binary: bytes):
         origin += 1
 
 
-def main():
+def main() -> None:
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <image file>")
         sys.exit(1)

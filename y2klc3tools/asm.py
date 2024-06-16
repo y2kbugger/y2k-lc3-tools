@@ -287,7 +287,7 @@ def asm_pass_two(symbol_table, lines):
     CONDS = {
         '.BLKW': lambda tokens, data, sym, lc: data.fromlist([0x0 for _ in range(tokens[1].v)]),
         '.FILL': lambda tokens, data, sym, lc: tokens[1].t == Type.CONST and data.append(tokens[1].v) or tokens[1].t == Type.LABEL and data.append(sym[tokens[1].v]),
-        '.STRINGZ': lambda tokens, data, sym, lc: data.fromlist([c for c in tokens[1].v.encode()]) or data.append(0x0),
+        '.STRINGZ': lambda tokens, data, sym, lc: data.fromlist(list(tokens[1].v.encode())) or data.append(0x0),
         **{op: lambda toks, data, sym, lc: data.append(encode[toks[0].v](OPS[toks[0].v] << 12, sym, lc, toks)) for op, _ in OPS.items()},
     }
     data = array.array("H", [])
@@ -329,7 +329,7 @@ def assemble(code: str):
     return symbol_table, bin_data.tobytes()
 
 
-def main():
+def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description='Assemble an assembly file. By defaults writes the object binary to stdout.')

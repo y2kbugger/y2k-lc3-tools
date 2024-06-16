@@ -15,7 +15,7 @@ class SqlMemory(Memory):
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
 
-    def load_words_at_address(self, words: array.array[int], address: int):
+    def load_words_at_address(self, words: array.array[int], address: int) -> None:
         assert len(words) + address <= UINT16_MAX
         assert address >= 0
         assert words.itemsize == 2  # 2 bytes per word
@@ -116,7 +116,7 @@ class SqlVM(VM):
         self.reg = SqlRegisters(self.conn)
         self.out = SqlOutput(self.conn)
 
-    def run_and_print(self, sql):
+    def run_and_print(self, sql) -> None:
         try:
             self.cursor.execute(sql)
         except sqlite3.OperationalError as e:
@@ -142,16 +142,16 @@ class SqlVM(VM):
 
         print(tabulate(frows, headers=[d[0] for d in self.cursor.description]), end='\n\n')
 
-    def run(self, sqlscript):
+    def run(self, sqlscript) -> None:
         for sql in sqlparse.split(sqlscript):
             self.run_and_print(sql)
 
-    def run_and_trace(self, sqlscript):
+    def run_and_trace(self, sqlscript) -> None:
         self.run_and_print("DELETE FROM msgout WHERE channel = 'trace'")
         self.run(sqlscript)
         self.run_and_print("SELECT * FROM msgout WHERE channel = 'trace'")
 
-    def create_hardware(self):
+    def create_hardware(self) -> None:
         THIS_DIR = Path(__file__).parent
         with open(THIS_DIR / 'sqlvm.sql') as f:
             sqlscript = f.read()

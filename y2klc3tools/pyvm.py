@@ -6,6 +6,7 @@ import sys
 import termios
 import tty
 from collections import defaultdict
+from typing import NoReturn
 
 from . import UINT16_MAX
 from .vm_abc import VM, Memory, Output, Registers, RunningState
@@ -13,11 +14,11 @@ from .vm_def import FL, OP, R, Trap
 
 
 ### OPs implementaion
-def bad_opcode(instr):
+def bad_opcode(instr) -> NoReturn:
     raise Exception(f'Bad opcode: {instr}')
 
 
-def add(instr, reg: Registers):
+def add(instr, reg: Registers) -> None:
     # destination register (DR)
     r0 = R((instr >> 9) & 0x7)
     # first operand (SR1)
@@ -35,7 +36,7 @@ def add(instr, reg: Registers):
     update_flags(r0, reg)
 
 
-def ldi(instr, reg: Registers, mem: Memory):
+def ldi(instr, reg: Registers, mem: Memory) -> None:
     """Load indirect"""
     # destination register (DR)
     r0 = R((instr >> 9) & 0x7)
@@ -47,7 +48,7 @@ def ldi(instr, reg: Registers, mem: Memory):
     update_flags(r0, reg)
 
 
-def and_(instr, reg: Registers):
+def and_(instr, reg: Registers) -> None:
     r0 = R((instr >> 9) & 0x7)
     r1 = R((instr >> 6) & 0x7)
     r2 = R(instr & 0x7)
@@ -62,26 +63,26 @@ def and_(instr, reg: Registers):
     update_flags(r0, reg)
 
 
-def not_(instr, reg: Registers):
+def not_(instr, reg: Registers) -> None:
     r0 = R((instr >> 9) & 0x7)
     r1 = R((instr >> 6) & 0x7)
     reg[r0] = ~reg[r1]
     update_flags(r0, reg)
 
 
-def br(instr, reg: Registers):
+def br(instr, reg: Registers) -> None:
     pc_offset = sign_extend((instr) & 0x1FF, 9)
     cond_flag = (instr >> 9) & 0x7
     if cond_flag & reg[R.COND]:
         reg[R.PC] += pc_offset
 
 
-def jmp(instr, reg: Registers):
+def jmp(instr, reg: Registers) -> None:
     r1 = R((instr >> 6) & 0x7)
     reg[R.PC] = reg[r1]
 
 
-def jsr(instr, reg: Registers):
+def jsr(instr, reg: Registers) -> None:
     r1 = R((instr >> 6) & 0x7)
     long_pc_offset = sign_extend(instr & 0x7FF, 11)
     long_flag = (instr >> 11) & 1
@@ -93,14 +94,14 @@ def jsr(instr, reg: Registers):
         reg[R.PC] = reg[r1]
 
 
-def ld(instr, reg: Registers, mem: Memory):
+def ld(instr, reg: Registers, mem: Memory) -> None:
     r0 = R((instr >> 9) & 0x7)
     pc_offset = sign_extend(instr & 0x1FF, 9)
     reg[r0] = mem[reg[R.PC] + pc_offset]
     update_flags(r0, reg)
 
 
-def ldr(instr, reg: Registers, mem: Memory):
+def ldr(instr, reg: Registers, mem: Memory) -> None:
     r0 = R((instr >> 9) & 0x7)
     r1 = R((instr >> 6) & 0x7)
     offset = sign_extend(instr & 0x3F, 6)
@@ -108,26 +109,26 @@ def ldr(instr, reg: Registers, mem: Memory):
     update_flags(r0, reg)
 
 
-def lea(instr, reg: Registers):
+def lea(instr, reg: Registers) -> None:
     r0 = R((instr >> 9) & 0x7)
     pc_offset = sign_extend(instr & 0x1FF, 9)
     reg[r0] = reg[R.PC] + pc_offset
     update_flags(r0, reg)
 
 
-def st(instr, reg: Registers, mem: Memory):
+def st(instr, reg: Registers, mem: Memory) -> None:
     r0 = R((instr >> 9) & 0x7)
     pc_offset = sign_extend(instr & 0x1FF, 9)
     mem[reg[R.PC] + pc_offset] = reg[r0]
 
 
-def sti(instr, reg: Registers, mem: Memory):
+def sti(instr, reg: Registers, mem: Memory) -> None:
     r0 = R((instr >> 9) & 0x7)
     pc_offset = sign_extend(instr & 0x1FF, 9)
     mem[mem[reg[R.PC] + pc_offset]] = reg[r0]
 
 
-def str_(instr, reg: Registers, mem: Memory):
+def str_(instr, reg: Registers, mem: Memory) -> None:
     r0 = R((instr >> 9) & 0x7)
     r1 = R((instr >> 6) & 0x7)
     offset = sign_extend(instr & 0x3F, 6)
@@ -137,12 +138,9 @@ def str_(instr, reg: Registers, mem: Memory):
 ### TRAPs implementation
 
 
-def check_key():
+def check_key() -> bool:
     _, o, _ = select.select([], [sys.stdin], [], 0)
-    for s in o:
-        if s == sys.stdin:
-            return True
-    return False
+    return any(s == sys.stdin for s in o)
 
 
 def getchar():
@@ -159,15 +157,15 @@ def getchar():
     return ch
 
 
-def trap_getc(reg: Registers):
+def trap_getc(reg: Registers) -> None:
     reg[R.R0] = ord(getchar())
 
 
-def trap_out(reg: Registers, out: Output):
+def trap_out(reg: Registers, out: Output) -> None:
     out.write(chr(reg[R.R0] & 0xFF))
 
 
-def trap_puts(reg: Registers, mem: Memory, out: Output):
+def trap_puts(reg: Registers, mem: Memory, out: Output) -> None:
     for i in range(reg[R.R0], len(mem)):
         c = mem[i]
         if c == 0:
@@ -175,14 +173,14 @@ def trap_puts(reg: Registers, mem: Memory, out: Output):
         out.write(chr(c))
 
 
-def trap_in(reg: Registers, out: Output):
+def trap_in(reg: Registers, out: Output) -> None:
     out.write("Enter a character: ")
     c = getchar()
     out.write(c)
     reg[R.R0] = ord(c)
 
 
-def trap_putsp(reg: Registers, mem: Memory):
+def trap_putsp(reg: Registers, mem: Memory) -> None:
     for i in range(reg[R.R0], len(mem)):
         c = mem[i]
         if c == 0:
@@ -194,7 +192,7 @@ def trap_putsp(reg: Registers, mem: Memory):
     sys.stdout.flush()
 
 
-def trap_halt(runstate: RunningState, out: Output):
+def trap_halt(runstate: RunningState, out: Output) -> None:
     out.write_err('-- HALT --\n')
     runstate.halt()
 
@@ -205,7 +203,7 @@ def trap(
     mem: Memory,
     runstate: RunningState,
     out: Output,
-):
+) -> None:
     t = Trap(instr & 0xFF)
 
     if t == Trap.GETC:
@@ -228,7 +226,7 @@ def sign_extend(x, bit_count):
     return x & 0xFFFF
 
 
-def update_flags(r: R, reg: Registers):
+def update_flags(r: R, reg: Registers) -> None:
     if not reg[r]:
         reg[R.COND] = FL.ZRO.value
     elif reg[r] >> 15:

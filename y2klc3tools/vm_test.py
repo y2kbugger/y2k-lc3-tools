@@ -18,7 +18,7 @@ NOP = '16BF'
 HLT = 'F025'
 
 
-def test_load_binary(vm: VM):
+def test_load_binary(vm: VM) -> None:
     image_bytes = '3000 E005 2213'
 
     vm.mem.load_binary_from_hex(image_bytes)
@@ -26,12 +26,12 @@ def test_load_binary(vm: VM):
     assert vm.mem[0x3000] == 0xE005
 
 
-def test_poke_memory(vm: VM):
+def test_poke_memory(vm: VM) -> None:
     vm.mem[0x3000] = 0xBABE
     assert vm.mem[0x3000] == 0xBABE
 
 
-def test_load_binary_bytes(vm: VM):
+def test_load_binary_bytes(vm: VM) -> None:
     image_bytes_hex = '3000 E005 2213'
     image_bytes = bytes.fromhex(image_bytes_hex)
 
@@ -40,7 +40,7 @@ def test_load_binary_bytes(vm: VM):
     assert vm.mem[0x3000] == 0xE005
 
 
-def test_load_binary_memory_size_is_correct(vm: VM):
+def test_load_binary_memory_size_is_correct(vm: VM) -> None:
     image_bytes = '3000 E005 2213'
 
     vm.mem.load_binary_from_hex(image_bytes)
@@ -48,7 +48,7 @@ def test_load_binary_memory_size_is_correct(vm: VM):
     assert len(vm.mem) == UINT16_MAX
 
 
-def test_load_binary_as_big_as_possible(vm: VM):
+def test_load_binary_as_big_as_possible(vm: VM) -> None:
     origin = '0000'
     image_bytes = origin + 'DEAD' * UINT16_MAX
 
@@ -58,7 +58,7 @@ def test_load_binary_as_big_as_possible(vm: VM):
     assert vm.mem[0xFFFF] == 0xDEAD
 
 
-def test_load_binary_fails_when_too_big(vm: VM):
+def test_load_binary_fails_when_too_big(vm: VM) -> None:
     origin = '0000'
     image_bytes = origin + 'DEAD' * (UINT16_MAX + 1)
 
@@ -66,7 +66,7 @@ def test_load_binary_fails_when_too_big(vm: VM):
         vm.mem.load_binary_from_hex(image_bytes)
 
 
-def test_load_binary_fails_with_partial_word(vm: VM):
+def test_load_binary_fails_with_partial_word(vm: VM) -> None:
     origin = '0000'
     image_bytes = origin + 'DEAD EE'
 
@@ -74,11 +74,11 @@ def test_load_binary_fails_with_partial_word(vm: VM):
         vm.mem.load_binary_from_hex(image_bytes)
 
 
-def test_is_running_after_reset(vm: VM):
+def test_is_running_after_reset(vm: VM) -> None:
     assert vm.runstate.is_running
 
 
-def test_step_moves_pc_by_one(vm: VM):
+def test_step_moves_pc_by_one(vm: VM) -> None:
     origin = '3000'
     image_bytes = origin + NOP
     vm.mem.load_binary_from_hex(image_bytes)
@@ -90,7 +90,7 @@ def test_step_moves_pc_by_one(vm: VM):
     assert vm.reg[R.PC] == pc_start + 1
 
 
-def test_continue_runs_until_halted(vm: VM):
+def test_continue_runs_until_halted(vm: VM) -> None:
     origin = '3000'
     image_bytes = origin + NOP * 10 + 'F025'
     vm.mem.load_binary_from_hex(image_bytes)
@@ -101,7 +101,7 @@ def test_continue_runs_until_halted(vm: VM):
     assert vm.reg[R.PC] == PC_START + 10 + 1
 
 
-def test_isnt_running_after_halt(vm: VM):
+def test_isnt_running_after_halt(vm: VM) -> None:
     origin = '3000'
     image_bytes = origin + NOP * 10 + 'F025'
     vm.mem.load_binary_from_hex(image_bytes)
@@ -109,7 +109,7 @@ def test_isnt_running_after_halt(vm: VM):
     assert not vm.runstate.is_running
 
 
-def test_step_complains_if_already_halted(vm: VM):
+def test_step_complains_if_already_halted(vm: VM) -> None:
     origin = '3000'
     image_bytes = origin + NOP * 10 + 'F025'
     vm.mem.load_binary_from_hex(image_bytes)
@@ -121,7 +121,7 @@ def test_step_complains_if_already_halted(vm: VM):
     assert vm.out.read_err() == "-- HALTED --\n"
 
 
-def test_continue_complains_if_already_halted(vm: VM):
+def test_continue_complains_if_already_halted(vm: VM) -> None:
     origin = '3000'
     image_bytes = origin + NOP * 10 + 'F025'
     vm.mem.load_binary_from_hex(image_bytes)
@@ -131,7 +131,7 @@ def test_continue_complains_if_already_halted(vm: VM):
     assert vm.out.read_err() == "-- HALTED --\n"
 
 
-def test_vm_can_run_looping_progam_with_output(vm: VM):
+def test_vm_can_run_looping_progam_with_output(vm: VM) -> None:
     vm.mem.load_binary_from_file('obj/asm/hello2.obj')
     vm.out.read_err()  # clear
     vm.continue_()
@@ -141,7 +141,7 @@ def test_vm_can_run_looping_progam_with_output(vm: VM):
     assert vm.out.read_err() == "-- HALT --\n"
 
 
-def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
+def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM) -> None:
     vm.mem.load_binary_from_file('obj/asm/hello2.obj')
     vm.reg.trace_enabled = True
     vm.continue_()
@@ -167,7 +167,7 @@ def test_tracing_vm_can_run_looping_progam_with_register_traces(vm: VM):
     ]
 
 
-def test_tracing_vm_can_run_looping_progam_with_register_traces2(vm: VM):
+def test_tracing_vm_can_run_looping_progam_with_register_traces2(vm: VM) -> None:
     vm.mem.load_binary_from_file('obj/asm/hard.obj')
     vm.reg.trace_enabled = True
     vm.continue_()
@@ -183,7 +183,7 @@ def test_tracing_vm_can_run_looping_progam_with_register_traces2(vm: VM):
     ]
 
 
-def test_tracing_vm_can_run_looping_progam_with_register_traces3(vm: VM):
+def test_tracing_vm_can_run_looping_progam_with_register_traces3(vm: VM) -> None:
     vm.mem.load_binary_from_file('obj/asm/legal.obj')
     vm.reg.trace_enabled = True
     vm.continue_()
@@ -199,7 +199,7 @@ def test_tracing_vm_can_run_looping_progam_with_register_traces3(vm: VM):
     ]
 
 
-def test_tracing_vm_can_run_looping_progam_with_register_traces4(vm: VM):
+def test_tracing_vm_can_run_looping_progam_with_register_traces4(vm: VM) -> None:
     vm.mem.load_binary_from_file('obj/asm/instructions.obj')
     vm.reg.trace_enabled = True
     vm.continue_()
