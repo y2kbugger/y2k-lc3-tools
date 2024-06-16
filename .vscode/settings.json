@@ -18,7 +18,7 @@
     "--preview"
   ],
   "python.terminal.activateEnvironment": true,
-  "python.analysis.typeCheckingMode": "standard", // TODO: change this to strict eventually
+  "python.analysis.typeCheckingMode": "standard", // TODO: change this to strict eventually, also set in pyproject.toml for precommit
   "python.analysis.diagnosticMode": "openFilesOnly", // TODO: change this to workspace eventually
   "github.copilot.editor.enableCodeActions": false
 }

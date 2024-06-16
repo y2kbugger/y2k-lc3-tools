@@ -1,10 +1,10 @@
-from abc import ABC, abstractmethod
 import array
-from collections.abc import Iterable
 import dataclasses
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
 
-from . import UINT16_MAX, PC_START
-from .vm_def import OP, R, FL
+from . import PC_START, UINT16_MAX
+from .vm_def import FL, R
 
 
 class Memory(ABC):

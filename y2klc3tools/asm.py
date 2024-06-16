@@ -1,6 +1,5 @@
 import array
 import sys
-
 from collections import namedtuple
 
 from . import UINT16_MAX
@@ -73,7 +72,7 @@ class Type:
 Token = namedtuple('Tok', 't, v')
 
 
-def tok_op_args(line):
+def tok_op_args(line: str) -> list[Token]:
     args = []
     for arg in line.split(','):
         arg = arg.strip()
@@ -92,15 +91,14 @@ def tok_op_args(line):
     return args
 
 
-def is_int(arg):
-    try:
-        int(arg)
-        return True
-    except ValueError:
-        return False
+def tok_dot_args(arg: str) -> list[Token]:
+    def _is_int(arg: str) -> bool:
+        try:
+            int(arg)
+            return True
+        except ValueError:
+            return False
 
-
-def tok_dot_args(arg):
     arg = arg.strip()
     if not arg:
         return []
@@ -120,7 +118,7 @@ def tok_dot_args(arg):
         return [Token(Type.CONST, int('0' + arg, 2))]
     elif arg.startswith('#'):
         return [Token(Type.CONST, int(arg[1:], 10))]
-    elif is_int(arg):
+    elif _is_int(arg):
         return [Token(Type.CONST, int(arg, 10))]
     else:
         # else it's a label
@@ -128,10 +126,11 @@ def tok_dot_args(arg):
     return []
 
 
-def tok(line):
+def tok(line: str) -> list[Token]:
     line = line.strip()
     if not line or line.startswith(';'):
-        return None
+        return []
+
     line = line.replace('\t', ' ')
     line, *_ = line.split(';', maxsplit=1)
     res = line.split(' ', maxsplit=1)
@@ -142,26 +141,26 @@ def tok(line):
         token, other = res[0].strip(), res[1].strip()
 
     if token in OPS:
-        return [Token(Type.OP, token)] + tok_op_args(other)
+        return [Token(Type.OP, token), *tok_op_args(other)]
     elif token.startswith('.'):
-        return [Token(Type.DOT, token.upper())] + tok_dot_args(other)
+        return [Token(Type.DOT, token.upper()), *tok_dot_args(other)]
     else:
         if other:
-            return [Token(Type.LABEL, token)] + tok(other)
+            return [Token(Type.LABEL, token), *tok(other)]
         else:
             return [Token(Type.LABEL, token)]
 
 
-def check_syntax(tokens):
-    # TODO:
+def check_syntax(tokens: list[Token]) -> None:
+    # TODO: raise exception on syntax error
     pass
 
 
-def incr(lc, tokens):
+def incr(lc: int, tokens: list[Token]) -> int:
     return lc + 1
 
 
-def asm_pass_one(code):
+def asm_pass_one(code: str) -> tuple[dict[str, int], list[tuple[list[Token], int]]]:  # TODO: make this a better first class thing
     CONDS = {
         '.ORIG': lambda lc, tokens: tokens[1].v,
         '.BLKW': lambda lc, tokens: lc + tokens[1].v,
@@ -177,7 +176,7 @@ def asm_pass_one(code):
         assert len(line) < MAX_LINE_LENGTH, 'line is too long'
         tokens = tok(line)
 
-        if not tokens:
+        if len(tokens) == 0:
             continue
         if tokens[0].v == '.END':
             break
@@ -287,18 +286,9 @@ encode = {
 def asm_pass_two(symbol_table, lines):
     CONDS = {
         '.BLKW': lambda tokens, data, sym, lc: data.fromlist([0x0 for _ in range(tokens[1].v)]),
-        '.FILL': lambda tokens, data, sym, lc: tokens[1].t == Type.CONST
-        and data.append(tokens[1].v)
-        or tokens[1].t == Type.LABEL
-        and data.append(sym[tokens[1].v]),
-        '.STRINGZ': lambda tokens, data, sym, lc: data.fromlist([c for c in tokens[1].v.encode()])
-        or data.append(0x0),
-        **{
-            op: lambda toks, data, sym, lc: data.append(
-                encode[toks[0].v](OPS[toks[0].v] << 12, sym, lc, toks)
-            )
-            for op, _ in OPS.items()
-        },
+        '.FILL': lambda tokens, data, sym, lc: tokens[1].t == Type.CONST and data.append(tokens[1].v) or tokens[1].t == Type.LABEL and data.append(sym[tokens[1].v]),
+        '.STRINGZ': lambda tokens, data, sym, lc: data.fromlist([c for c in tokens[1].v.encode()]) or data.append(0x0),
+        **{op: lambda toks, data, sym, lc: data.append(encode[toks[0].v](OPS[toks[0].v] << 12, sym, lc, toks)) for op, _ in OPS.items()},
     }
     data = array.array("H", [])
     data.append(lines[0][0][1].v)
@@ -342,13 +332,11 @@ def assemble(code: str):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description='Assemble an assembly file. By defaults writes the object binary to stdout.'
-    )
+    parser = argparse.ArgumentParser(description='Assemble an assembly file. By defaults writes the object binary to stdout.')
     parser.add_argument('file', type=str, help='assembly file to assemble')
 
     args = parser.parse_args()
-    with open(args.file, 'r') as f:
+    with open(args.file) as f:
         code = f.read()
 
     symbol_table, bin_data = assemble(code)

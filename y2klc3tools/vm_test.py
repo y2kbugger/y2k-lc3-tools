@@ -1,6 +1,6 @@
 import pytest
 
-from y2klc3tools import UINT16_MAX, PC_START
+from y2klc3tools import PC_START, UINT16_MAX
 from y2klc3tools.pyvm import PyVM, R
 from y2klc3tools.sqlvm import SqlVM
 from y2klc3tools.vm_abc import VM

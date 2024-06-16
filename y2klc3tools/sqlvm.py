@@ -1,16 +1,14 @@
 import array
-from collections.abc import Iterable
-from pathlib import Path
 import sqlite3
 import sys
-from typing import Any
-
-from . import UINT16_MAX, PC_START
-from .vm_def import OP, R, FL
-from .vm_abc import Memory, Output, Registers, RunningState, VM
+from pathlib import Path
 
 import sqlparse
 from tabulate import tabulate
+
+from . import UINT16_MAX
+from .vm_abc import VM, Memory, Output, Registers, RunningState
+from .vm_def import R
 
 
 class SqlMemory(Memory):

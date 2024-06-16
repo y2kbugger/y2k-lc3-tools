@@ -66,3 +66,4 @@ quote-style = "preserve"
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+typeCheckingMode = "standard"

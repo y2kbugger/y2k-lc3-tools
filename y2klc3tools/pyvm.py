@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import array
-from collections import defaultdict
 import select
 import sys
 import termios
 import tty
+from collections import defaultdict
 
-from . import UINT16_MAX, PC_START
-from .vm_def import R, OP, FL, Trap
+from . import UINT16_MAX
 from .vm_abc import VM, Memory, Output, Registers, RunningState
+from .vm_def import FL, OP, R, Trap
 
 
 ### OPs implementaion
@@ -257,7 +257,6 @@ class PyRegisters(Registers):
         self._registers[key] = value % UINT16_MAX
 
     def __getitem__(self, key: R) -> int:
-        print(f'Getting {key}', self._registers[key])
         return self._registers[key]
 
 
@@ -308,9 +307,7 @@ class PyVM(VM):
             and_(instr, self.reg)
         elif op == OP.BR:
             br(instr, self.reg)
-        elif op == OP.JMP:
-            jmp(instr, self.reg)
-        elif op == OP.RET:
+        elif op == OP.JMP or op == OP.RET:
             jmp(instr, self.reg)
         elif op == OP.JSR:
             jsr(instr, self.reg)

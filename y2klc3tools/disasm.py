@@ -4,7 +4,6 @@ import sys
 
 from . import UINT16_MAX
 
-
 ops = {
     0: 'BR',
     1: 'ADD',
