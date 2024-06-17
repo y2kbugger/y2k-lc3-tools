@@ -183,14 +183,8 @@ class Output(ABC):
     def write(self, text: str) -> None:
         self._write(text, 'output')
 
-    def write_err(self, text: str) -> None:
-        self._write(text, 'error')
-
     def read(self) -> str:
         return self._read('output')
-
-    def read_err(self) -> str:
-        return self._read('error')
 
 
 @dataclasses.dataclass
@@ -201,21 +195,21 @@ class VM(ABC):
     out: Output
 
     def reset(self) -> None:
-        self.out.write_err('-- RESET --\n')
+        print('-- RESET --\n')
         self.reg.reset()
         self.runstate.run()
 
     def continue_(self) -> None:
-        if not self.runstate.is_running:
-            self.out.write_err('-- HALTED --\n')
-            return
-        while self.runstate.is_running:
-            self.step()
+        self.step()
+        while True:
+            try:
+                self.step()
+            except Exception:
+                break
 
     def step(self) -> None:
         if not self.runstate.is_running:
-            self.out.write_err('-- HALTED --\n')
-            return
+            raise Exception("-- HALTED --\n")
 
         if self.reg.trace_enabled:
             self.reg.save_trace()

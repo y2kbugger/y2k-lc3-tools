@@ -58,8 +58,6 @@ Use the venv created by poetry to run the notebooks, one easy way is from within
 1. Somehow ensure that all sql statements can be exported as script instead executing
 1. Get the assembler working in my repo and running under pytest
   - tests for escape sequences in stringz, e.g: `CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"`
-1. sqlvm
-  - push all HALTED and RESET messages into SQL (make reset and step interfaces so that they have sql equivalents)
 1. Improve disasm
   - pytests
   - Get .FILL correct

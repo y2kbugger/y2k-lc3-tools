@@ -192,7 +192,7 @@ def trap_putsp(reg: Registers, mem: Memory) -> None:
 
 
 def trap_halt(runstate: RunningState, out: Output) -> None:
-    out.write_err('-- HALT --\n')
+    print('-- HALT --\n')
     runstate.halt()
 
 

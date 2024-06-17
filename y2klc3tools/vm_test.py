@@ -113,33 +113,30 @@ def test_step_complains_if_already_halted(vm: VM) -> None:
     origin = '3000'
     image_bytes = origin + NOP * 10 + 'F025'
     vm.mem.load_binary_from_hex(image_bytes)
-    vm.continue_()
-    vm.out.read_err()  # clear
+    vm.continue_()  # run until halt
 
-    vm.step()
-
-    assert vm.out.read_err() == "-- HALTED --\n"
+    with pytest.raises(Exception, match="HALTED"):
+        vm.step()
 
 
 def test_continue_complains_if_already_halted(vm: VM) -> None:
     origin = '3000'
     image_bytes = origin + NOP * 10 + 'F025'
     vm.mem.load_binary_from_hex(image_bytes)
-    vm.continue_()
-    vm.out.read_err()  # clear
-    vm.continue_()
-    assert vm.out.read_err() == "-- HALTED --\n"
+    vm.continue_()  # run until halt
+
+    with pytest.raises(Exception, match="HALTED"):
+        vm.continue_()
 
 
 @pytest.mark.xfail
 def test_vm_can_run_looping_progam_with_output(vm: VM) -> None:
     vm.mem.load_binary_from_file('obj/asm/hello2.obj')
-    vm.out.read_err()  # clear
     vm.continue_()
     # check that the program output the expected string
 
     assert vm.out.read() == "Hello, World!\n" * 5
-    assert vm.out.read_err() == "-- HALT --\n"
+    assert not vm.runstate.is_running
 
 
 @pytest.mark.xfail
