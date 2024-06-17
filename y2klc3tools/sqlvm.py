@@ -7,8 +7,7 @@ import sqlparse
 from tabulate import tabulate
 
 from . import UINT16_MAX
-from .vm_abc import VM, Memory, Output, Registers, RunningState
-from .vm_def import UINT16, R
+from .vm import UINT16, VM, Memory, Output, R, Registers, RunningState
 
 
 class SqlMemory(Memory):

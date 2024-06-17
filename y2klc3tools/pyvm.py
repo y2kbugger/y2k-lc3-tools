@@ -9,8 +9,7 @@ from collections import defaultdict
 from typing import NoReturn
 
 from . import UINT16_MAX
-from .vm_abc import VM, Memory, Output, Registers, RunningState
-from .vm_def import FL, OP, UINT16, R, Trap
+from .vm import FL, OP, UINT16, VM, Memory, Output, R, Registers, RunningState, Trap
 
 
 # OPs implementaion
